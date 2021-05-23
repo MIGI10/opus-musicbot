@@ -1,0 +1,19 @@
+{
+  "name": "opus-bot",
+  "version": "1.0.0",
+  "description": "A simple but rich Discord music bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MIGI10/opus-musicbot.git"
+  },
+  "author": "MIGI10",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MIGI10/opus-musicbot/issues"
+  },
+  "homepage": "https://github.com/MIGI10/opus-musicbot#readme"
+}
