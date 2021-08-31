@@ -4,7 +4,8 @@
   "description": "A simple but rich Discord music bot",
   "main": "index.js",
   "scripts": {
-    "test": "node index.js"
+    "test": "node index.js",
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
@@ -15,5 +16,16 @@
   "bugs": {
     "url": "https://github.com/MIGI10/opus-musicbot/issues"
   },
-  "homepage": "https://github.com/MIGI10/opus-musicbot#readme"
+  "homepage": "https://github.com/MIGI10/opus-musicbot#readme",
+  "dependencies": {
+    "@discordjs/opus": "^0.6.0",
+    "@discordjs/voice": "^0.6.0",
+    "discord.js": "^13.1.0",
+    "ffmpeg-static": "^4.3.0",
+    "fs": "0.0.1-security",
+    "libsodium-wrappers": "^0.7.9",
+    "path": "^0.12.7",
+    "youtube-search-api": "https://github.com/MIGI10/youtube-search-api/tarball/main",
+    "ytdl-core": "^4.8.0"
+  }
 }
