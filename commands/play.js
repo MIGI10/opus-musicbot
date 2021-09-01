@@ -1,5 +1,5 @@
-const ytdl = require('ytdl-core');
 const youtubeSearch = require('youtube-search-api');
+const youtubedl = require('youtube-dl-exec').raw;
 const spotifyReq = require('../spotify/req-content');
 
 module.exports.run = async (client, message, args) => {
@@ -271,20 +271,14 @@ module.exports.run = async (client, message, args) => {
 
         queue.player = player;
 
-        const stream = ytdl(song.url, {
-            inlineVolume: true,
-            filter: "audioonly",
-            opusEncoded: true,
-            bitrate: 320,
-            quality: "highestaudio",
-            liveBuffer: 40000,
-            highWaterMark: 1 << 32,
-        });
+        const stream = youtubedl(song.url, {
+            o: '-',
+            q: '',
+            f: 'bestaudio[ext=webm+acodec=opus+asr=48000]/bestaudio',
+            r: '100K',
+          }, { stdio: ['ignore', 'pipe', 'ignore'] });
 
-        const resource = voice.createAudioResource(stream, {
-            inlineVolume: true,
-            metadata: song
-        });
+        const resource = voice.createAudioResource(stream.stdout);
 
         player.play(resource);
 
