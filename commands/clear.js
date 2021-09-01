@@ -20,7 +20,11 @@ module.exports.run = async (client, message, args) => {
 
     const usersConnected = serverQueue.voiceChannel.members.size - 1;
 
-    if (usersConnected == 1 || message.member.roles.cache.has(client.config.modRoleID)) {
+    const guildSaved = await client.db.guild.findOne({ 
+        id: message.guild.id,
+    }).catch(err => console.log(err));
+
+    if (usersConnected == 1 || message.member.roles.cache.has(guildSaved.modRoleId)) {
 
         await clear();
 

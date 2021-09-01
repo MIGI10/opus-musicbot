@@ -1,6 +1,6 @@
 const ytdl = require('ytdl-core');
 
-module.exports.run = (client, message, args) => {
+module.exports.run = async (client, message, args) => {
 
     voice = client.discordjsvoice
 
@@ -22,9 +22,13 @@ module.exports.run = (client, message, args) => {
         return message.reply('El reproductor está detenido')
     }
 
+    const guildSaved = await client.db.guild.findOne({ 
+        id: message.guild.id,
+    }).catch(err => console.log(err));
+
     const nowPlaying = serverQueue.songs[0];
 
-    if (!message.member.roles.cache.has(client.config.modRoleID) && message.author.id != nowPlaying.requesterId) {
+    if (!message.member.roles.cache.has(guildSaved.modRoleId) && message.author.id != nowPlaying.requesterId) {
         return message.reply(`Solo puede usar \`${client.prefix}forceskip\` la persona que ha solicitado la canción que suena actualmente (${nowPlaying.requesterUsertag}) o un moderador.`);
     }
 
@@ -33,28 +37,15 @@ module.exports.run = (client, message, args) => {
     if (serverQueue.songs.length >= 1) {
 
         const song = serverQueue.songs[0];
-        client.user.setPresence({
-            activities: [{ 
-                name: song.title,
-                type: 'LISTENING'
-            }],
-            status: 'online'
-        })
 
-        const stream = ytdl(song.url, {
-            inlineVolume: true,
-            filter: "audioonly",
-            opusEncoded: true,
-            bitrate: 320,
-            quality: "highestaudio",
-            liveBuffer: 40000,
-            highWaterMark: 1 << 32,
-        });
+        const stream = youtubedl(song.url, {
+            o: '-',
+            q: '',
+            f: 'bestaudio[ext=webm+acodec=opus+asr=48000]/bestaudio',
+            r: '100K',
+          }, { stdio: ['ignore', 'pipe', 'ignore'] });
 
-        const resource = voice.createAudioResource(stream, {
-            inlineVolume: true,
-            metadata: song
-        });
+        const resource = voice.createAudioResource(stream.stdout);
 
         serverQueue.player.play(resource);
 

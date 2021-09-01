@@ -24,6 +24,7 @@
     "ffmpeg-static": "^4.3.0",
     "fs": "0.0.1-security",
     "libsodium-wrappers": "^0.7.9",
+    "mongoose": "^6.0.3",
     "path": "^0.12.7",
     "youtube-dl-exec": "^1.2.5",
     "youtube-search-api": "https://github.com/MIGI10/youtube-search-api/tarball/main",

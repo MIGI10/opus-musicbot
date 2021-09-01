@@ -1,4 +1,6 @@
-const ytdl = require('ytdl-core');
+const playFile = require('./play');
+const youtubedl = require('youtube-dl-exec').raw;
+
 
 module.exports.run = async (client, message, args) => {
 
@@ -58,28 +60,15 @@ module.exports.run = async (client, message, args) => {
         if (serverQueue.songs.length >= 1) {
     
             const song = serverQueue.songs[0];
-            client.user.setPresence({
-                activities: [{ 
-                    name: song.title,
-                    type: 'LISTENING'
-                }],
-                status: 'online'
-            })
+
+            const stream = youtubedl(song.url, {
+                o: '-',
+                q: '',
+                f: 'bestaudio[ext=webm+acodec=opus+asr=48000]/bestaudio',
+                r: '100K',
+              }, { stdio: ['ignore', 'pipe', 'ignore'] });
     
-            const stream = ytdl(song.url, {
-                inlineVolume: true,
-                filter: "audioonly",
-                opusEncoded: true,
-                bitrate: 320,
-                quality: "highestaudio",
-                liveBuffer: 40000,
-                highWaterMark: 1 << 32,
-            });
-    
-            const resource = voice.createAudioResource(stream, {
-                inlineVolume: true,
-                metadata: song
-            });
+            const resource = voice.createAudioResource(stream.stdout);
     
             serverQueue.player.play(resource);
 
@@ -88,14 +77,6 @@ module.exports.run = async (client, message, args) => {
             serverQueue.textChannel.send(`Reproduciendo **${song.title}** [${song.duration}] || Solicitado por \`${song.requesterUsertag}\``);
     
         } else {
-    
-            client.user.setPresence({
-                activities: [{ 
-                    name: `${client.prefix}help | Reproductor detenido`,
-                    type: 'LISTENING'
-                }],
-                status: 'idle'
-            })
             
             if (serverQueue.playing) {
                 client.queue.delete(queue.textChannel.guild.id);

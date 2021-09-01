@@ -1,8 +1,10 @@
 {
     "prefix":"o!",
     "botToken":"",
-    "modRoleID":"",
     "botOwnerID":"",
     "spotifyClientId":"",
-    "spotifyClientSecret":""
+    "spotifyClientSecret":"",
+    "mongoIP":"",
+    "mongoPort":"",
+    "mongoDatabase":""
 }

@@ -4,6 +4,12 @@ const spotifyReq = require('../spotify/req-content');
 
 module.exports.run = async (client, message, args) => {
 
+    const guildConfigured = await client.db.guild.findOne({ 
+        id: message.guild.id,
+    }).catch(err => console.log(err));
+
+    if (!guildConfigured) return message.channel.send(`No he sido configurado todavía, un usuario con permisos debe ejecutar \`${client.prefix}config\``)
+
     voice = client.discordjsvoice
 
     if (!client.queue.get(message.guild.id)) { 
@@ -49,13 +55,7 @@ module.exports.run = async (client, message, args) => {
                     serverQueue.player.unpause();
                     serverQueue.songs[0].pauseTimestamps[serverQueue.songs[0].pauseTimestamps.length - 1].timeAtUnpause = Date.now();
                     serverQueue.playing = true;
-                    client.user.setPresence({
-                        activities: [{ 
-                            name: serverQueue.songs[0].title,
-                            type: 'LISTENING'
-                        }],
-                        status: 'online'
-                    })
+
                     message.channel.send('Reproductor reanudado')
             }
         } else {
@@ -254,53 +254,41 @@ module.exports.run = async (client, message, args) => {
     async function play(song, queue, client) {
 
         queue.playing = true
-
-        client.user.setPresence({
-            activities: [{ 
-                name: song.title,
-                type: 'LISTENING'
-            }],
-            status: 'online'
-        })
-
-        const player = voice.createAudioPlayer({
-            behaviors: {
-                noSubscriber: voice.NoSubscriberBehavior.Pause,
-            },
-        });
-
-        queue.player = player;
-
+    
+        if (!queue.player) {
+    
+            const player = voice.createAudioPlayer({
+                behaviors: {
+                    noSubscriber: voice.NoSubscriberBehavior.Pause,
+                },
+            });
+    
+            queue.player = player;
+        }
+    
         const stream = youtubedl(song.url, {
             o: '-',
             q: '',
             f: 'bestaudio[ext=webm+acodec=opus+asr=48000]/bestaudio',
             r: '100K',
           }, { stdio: ['ignore', 'pipe', 'ignore'] });
-
+    
         const resource = voice.createAudioResource(stream.stdout);
-
-        player.play(resource);
-
+    
+        queue.player.play(resource);
+    
         const dispatcher = queue.connection
-            .subscribe(player)
-
+            .subscribe(queue.player)
+    
         song.timeAtPlay = Date.now();
-
-        player.once(voice.AudioPlayerStatus.Idle, () => {
-
+    
+        queue.player.once(voice.AudioPlayerStatus.Idle, () => {
+    
             queue.songs.shift();
             if (queue.songs.length >= 1) {
                 return play(queue.songs[0], queue, client);
             } else {
-                client.user.setPresence({
-                    activities: [{ 
-                        name: `${client.prefix}help | Reproductor detenido`,
-                        type: 'LISTENING'
-                    }],
-                    status: 'idle'
-                })
-
+    
                 if (queue.playing) {
                     client.queue.delete(queue.textChannel.guild.id);
                     queue.textChannel.send('No hay más canciones en la cola, canal de voz abandonado')
@@ -308,24 +296,17 @@ module.exports.run = async (client, message, args) => {
                 }
             }
         });
-
-        player.on("error", (error) => {
+    
+        queue.player.once("error", (error) => {
             let errorCode = Math.floor(Math.random()*1000);
             console.log(`--------- Internal error code: ${errorCode} ---------`);
             console.error(error);
             message.channel.send(`ERROR: Ha ocurrido un error interno, si el problema persiste contacta con la administración del servidor y proporciona el siguiente código de error: \`${errorCode}\``);
-
-            client.user.setPresence({
-                activities: [{ 
-                    name: `${client.prefix}help | Reproductor detenido`,
-                    type: 'LISTENING'
-                }],
-                status: 'idle'
-            })
+    
             client.queue.delete(queue.textChannel.guild.id);
             return queue.connection.destroy();
         });
-
+    
         queue.textChannel.send(`Reproduciendo **${song.title}** [${song.duration}] || Solicitado por \`${song.requesterUsertag}\``);
     }
 }

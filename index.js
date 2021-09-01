@@ -10,10 +10,12 @@ const client = new Discord.Client({ intents: [
     Discord.Intents.FLAGS.GUILD_VOICE_STATES
 ] 
 });
+const db = require("mongoose");
 const config = require('./config.json');
 
 client.prefix = config.prefix;
 client.config = config;
+client.db = db;
 client.commands = new Discord.Collection();
 client.cmdaliases = new Discord.Collection();
 client.discordjs = Discord;
@@ -27,6 +29,27 @@ commands.run(client);
 
 const events = require("./structures/event");
 events.run(client);
+
+function dbConnect() {
+    db.connect(`mongodb://${config.mongoIP}:${config.mongoPort}/${config.mongoDatabase}`, { useNewUrlParser: true, useUnifiedTopology: true })
+};
+
+setTimeout(dbConnect, 5000);
+
+const guildSchema = new db.Schema({
+    id: String,
+    name: String,
+    memberCount: Number,
+    ownerId: String,
+    isPartnered: Boolean,
+    joinedAt: Date,
+    boostCount: Number,
+    modRoleId: String
+});
+
+const guild = db.model("guild", guildSchema);
+
+db.guild = guild;
 
 process.on('unhandledRejection', error => {
 	console.error('[EVENT] Unhandled promise rejection:', error);

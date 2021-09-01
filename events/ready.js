@@ -10,7 +10,7 @@ module.exports = (client) => {
 
     client.user.setPresence({
         activities: [{ 
-            name: `${client.prefix}help | Reproductor detenido`,
+            name: `${client.prefix}help`,
             type: 'LISTENING'
         }],
         status: 'idle'
