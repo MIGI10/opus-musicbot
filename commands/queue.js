@@ -51,93 +51,102 @@ module.exports.run = async (client, message, args) => {
 
         let queueEmbed = await nowPlaying(serverQueue, message);
 
-        for (let i = 1; (serverQueue.songs.length - 1) >= i && i <= 6; i++) {
-            queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, `Solicitado por ${serverQueue.songs[i].requesterUsertag}`)
-        }
+        const totalPages = Math.ceil((serverQueue.songs.length - 1) / 6)
 
-        const msg = await message.channel.send({ embeds: [queueEmbed], components: [row]});
+        if (totalPages === 0) {
 
-        const filter = i => i.member.voice.channel && i.member.voice.channel == serverQueue.voiceChannel;
+            message.channel.send({ embeds: [queueEmbed]});
 
-        const collector = message.channel.createMessageComponentCollector({ filter, time: 60000 });
+        } else {
 
-        collector.on('collect', async int => {
+            for (let i = 1; (serverQueue.songs.length - 1) >= i && i <= 6; i++) {
+                queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, `Solicitado por ${serverQueue.songs[i].requesterUsertag}`)
+            }
 
-            if (int.customId === 'first_page') {
+            const msg = await message.channel.send({ embeds: [queueEmbed], components: [row]});
 
-                firstPage(int);
+            const filter = i => i.member.voice.channel && i.member.voice.channel == serverQueue.voiceChannel;
 
-            } else if (int.customId === 'last_page') {
+            const collector = message.channel.createMessageComponentCollector({ filter, time: 60000 });
 
-                lastPage(int);
+            collector.on('collect', async int => {
 
-            } else if (int.customId === 'back_page') {
-
-                const previousFirstSong = parseInt(int.message.embeds[0].fields[0].name.split('.')[0])
-                const firstSongInPage = previousFirstSong - 6;
-                const totalSongs = serverQueue.songs.length - 1;
-                const totalSongsQuotient = totalSongs / 6;
-
-                if (firstSongInPage > 0) {
-
-                    queueEmbed = await nowPlaying(serverQueue, message);
-
-                    for (let i = firstSongInPage; (firstSongInPage + 5) >= i && totalSongs >= i; i++) {
-                        queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, `Solicitado por ${serverQueue.songs[i].requesterUsertag}`)
-                    }
-    
-                    queueEmbed.setFooter(`Página ${Math.ceil(firstSongInPage / 6)} de ${Math.ceil(totalSongsQuotient)}`)
-    
-                    await int.update({ embeds: [queueEmbed], components: [row] });
-
-                } else {
+                if (int.customId === 'first_page') {
 
                     firstPage(int);
-                }
 
-            } else if (int.customId === 'next_page') {
-
-                const previousFirstSong = parseInt(int.message.embeds[0].fields[0].name.split('.')[0])
-                const firstSongInPage = previousFirstSong + 6;
-                const totalSongs = serverQueue.songs.length - 1;
-                const totalSongsQuotient = totalSongs / 6;
-
-                if (firstSongInPage <= totalSongs) {
-                    
-                    queueEmbed = await nowPlaying(serverQueue, message);
-
-                    for (let i = firstSongInPage; (firstSongInPage + 5) >= i && totalSongs >= i; i++) {
-                        queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, `Solicitado por ${serverQueue.songs[i].requesterUsertag}`)
-                    }
-
-                    queueEmbed.setFooter(`Página ${Math.ceil(firstSongInPage / 6)} de ${Math.ceil(totalSongsQuotient)}`)
-
-                    await int.update({ embeds: [queueEmbed], components: [row] });
-
-                } else {
+                } else if (int.customId === 'last_page') {
 
                     lastPage(int);
+
+                } else if (int.customId === 'back_page') {
+
+                    const previousFirstSong = parseInt(int.message.embeds[0].fields[0].name.split('.')[0])
+                    const firstSongInPage = previousFirstSong - 6;
+                    const totalSongs = serverQueue.songs.length - 1;
+                    const totalSongsQuotient = totalSongs / 6;
+
+                    if (firstSongInPage > 0) {
+
+                        queueEmbed = await nowPlaying(serverQueue, message);
+
+                        for (let i = firstSongInPage; (firstSongInPage + 5) >= i && totalSongs >= i; i++) {
+                            queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, `Solicitado por ${serverQueue.songs[i].requesterUsertag}`)
+                        }
+        
+                        queueEmbed.setFooter(`Página ${Math.ceil(firstSongInPage / 6)} de ${Math.ceil(totalSongsQuotient)}`)
+        
+                        await int.update({ embeds: [queueEmbed], components: [row] });
+
+                    } else {
+
+                        firstPage(int);
+                    }
+
+                } else if (int.customId === 'next_page') {
+
+                    const previousFirstSong = parseInt(int.message.embeds[0].fields[0].name.split('.')[0])
+                    const firstSongInPage = previousFirstSong + 6;
+                    const totalSongs = serverQueue.songs.length - 1;
+                    const totalSongsQuotient = totalSongs / 6;
+
+                    if (firstSongInPage <= totalSongs) {
+                        
+                        queueEmbed = await nowPlaying(serverQueue, message);
+
+                        for (let i = firstSongInPage; (firstSongInPage + 5) >= i && totalSongs >= i; i++) {
+                            queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, `Solicitado por ${serverQueue.songs[i].requesterUsertag}`)
+                        }
+
+                        queueEmbed.setFooter(`Página ${Math.ceil(firstSongInPage / 6)} de ${Math.ceil(totalSongsQuotient)}`)
+
+                        await int.update({ embeds: [queueEmbed], components: [row] });
+
+                    } else {
+
+                        lastPage(int);
+                    }
                 }
-            }
-        });
+            });
 
-        collector.on('end', collected => {
+            collector.on('end', collected => {
 
-            firstPageButton.setDisabled(true);
-            lastPageButton.setDisabled(true);
-            backPageButton.setDisabled(true);
-            nextPageButton.setDisabled(true);
+                firstPageButton.setDisabled(true);
+                lastPageButton.setDisabled(true);
+                backPageButton.setDisabled(true);
+                nextPageButton.setDisabled(true);
 
-            row = new MessageActionRow()
-            .addComponents(
-                firstPageButton,
-                backPageButton,
-                nextPageButton,
-                lastPageButton
-            );
+                row = new MessageActionRow()
+                .addComponents(
+                    firstPageButton,
+                    backPageButton,
+                    nextPageButton,
+                    lastPageButton
+                );
 
-            msg.edit({ components: [row] });
-        });
+                msg.edit({ components: [row] });
+            });
+        }
     }
 
     async function nowPlaying(queue, message) {
@@ -207,11 +216,15 @@ module.exports.run = async (client, message, args) => {
         
         const timeBar = `${timeSincePlay} ${scrubber} ${queue.songs[0].duration}`
 
+        const totalPages = Math.ceil((queue.songs.length - 1) / 6)?
+            Math.ceil((queue.songs.length - 1) / 6):
+            1;
+
         const queueEmbed = new client.discordjs.MessageEmbed()
             .setTitle(`Cola de ${message.guild.name}`)
             .setDescription(`**Ahora Suena:**\nSolicitado por ${queue.songs[0].requesterUsertag}\n\`\`\`nim\n${queue.songs[0].title}\n\n${timeBar}\n\`\`\``)
             .setColor('#00f5ff')
-            .setFooter(`Página 1 de ${Math.ceil((queue.songs.length - 1) / 6)}`)
+            .setFooter(`Página 1 de ${totalPages}`)
 
         return queueEmbed;
     }
