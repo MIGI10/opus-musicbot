@@ -116,6 +116,8 @@ module.exports.run = async (client, message, args) => {
 
                 const songs = await spotifyReq.run(client, message, args);
 
+                if (!songs.type) return;
+
                 let i = 1;
 
                 if (songs.type == 'playlist') {
@@ -314,7 +316,7 @@ module.exports.run = async (client, message, args) => {
 module.exports.help = {
     name: "play",
     description: "Conectar a un canal de voz y reproducir la canción solicitada, añadir una canción a la cola y para reanudar tras usar el comando de pausa",
-    usage: "Para conectar y reproducir o añadir una canción a la cola, escribir el nombre de la canción y artista seguido del comando. Para reanudar tras pausa, escribir solo el comando",
+    usage: "Para conectar y reproducir o añadir una canción a la cola, escribe el nombre o link de YouTube/Spotify de una canción. Para cargar una playlist o album de Spotify pega el link del mismo. Para reanudar tras pausa, escribe solo el comando.\n\nHay disponibles dos argumentos opcionales al cargar una playlist o un album de Spotify, el primero es el número de la canción que desea que sea la primera mientras que el segundo invierte el orden de la playlist al escribir `reverse`:\n\nplay [url] <número primera canción> <reverse>",
     alias: "p"
 }
 
