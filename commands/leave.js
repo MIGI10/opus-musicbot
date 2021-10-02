@@ -16,14 +16,6 @@ module.exports.run = (client, message, args) => {
 
     serverQueue.textChannel.send(`Reproductor detenido, abandonando **<#${serverQueue.voiceChannel.id}>**`);
 
-    client.user.setPresence({
-        activities: [{ 
-            name: `${client.prefix}help | Reproductor detenido`,
-            type: 'LISTENING'
-        }],
-        status: 'idle'
-    })
-
     serverQueue.connection.destroy();
 
     client.queue.delete(message.guild.id);

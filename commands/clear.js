@@ -56,14 +56,6 @@ module.exports.run = async (client, message, args) => {
         serverQueue.playing = false;
         serverQueue.songs = [];
         serverQueue.player.stop();
-        
-        client.user.setPresence({
-        activities: [{ 
-            name: `${client.prefix}help | Reproductor detenido`,
-            type: 'LISTENING'
-        }],
-        status: 'idle'
-        })
 
         message.channel.send('Se ha limpiado la cola y se ha detenido el reproductor')
     }
