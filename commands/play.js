@@ -1,6 +1,7 @@
 const youtubeSearch = require('youtube-search-api');
 const youtubedl = require('youtube-dl-exec').raw;
 const spotifyReq = require('../spotify/req-content');
+const ytdl = require('ytdl-core');
 
 module.exports.run = async (client, message, args) => {
 
@@ -99,7 +100,7 @@ module.exports.run = async (client, message, args) => {
                 let errorCode = Math.floor(Math.random()*1000);
                 console.log(`--------- Internal error code: ${errorCode} ---------`);
                 console.log(err);
-                return message.channel.send(`ERROR: Ha ocurrido un error interno, si el problema persiste contacta con la administración del servidor y proporciona el siguiente código de error: \`${errorCode}\``);
+                return message.channel.send(`ERROR: Ha ocurrido un error interno, si el problema persiste envíame un mensaje privado y proporciona el siguiente código de error: \`${errorCode}\``);
             }
     }
 
@@ -265,7 +266,16 @@ module.exports.run = async (client, message, args) => {
     
             queue.player = player;
         }
-    
+
+        const option = {
+            filter: "audioonly",
+            highWaterMark: 1 << 25,
+        };
+        const stream = await ytdl(song.url, option);
+
+        const resource = voice.createAudioResource(stream);
+
+        /*
         const stream = youtubedl(song.url, {
             o: '-',
             q: '',
@@ -274,6 +284,7 @@ module.exports.run = async (client, message, args) => {
           }, { stdio: ['ignore', 'pipe', 'ignore'] });
     
         const resource = voice.createAudioResource(stream.stdout);
+        */
     
         queue.player.play(resource);
     
@@ -301,7 +312,7 @@ module.exports.run = async (client, message, args) => {
             let errorCode = Math.floor(Math.random()*1000);
             console.log(`--------- Internal error code: ${errorCode} ---------`);
             console.error(error);
-            message.channel.send(`ERROR: Ha ocurrido un error interno, si el problema persiste contacta con la administración del servidor y proporciona el siguiente código de error: \`${errorCode}\``);
+            message.channel.send(`ERROR: Ha ocurrido un error interno, si el problema persiste envíame un mensaje privado y proporciona el siguiente código de error: \`${errorCode}\``);
     
             client.queue.delete(queue.textChannel.guild.id);
             return queue.connection.destroy();
