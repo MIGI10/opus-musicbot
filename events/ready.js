@@ -3,9 +3,9 @@ module.exports = (client) => {
     var readymsg = `Bot is now UP as ${client.user.tag} at ${client.readyAt}`;
     
     console.log(`-----------------------\n\n${readymsg}\n\n-----------------------`);
-    client.channels.fetch('846059980841943040')
+    client.channels.fetch(client.config.informChannel)
     .then(channel => {
-        channel.send(readymsg + ' <@487448257954316298>');
+        channel.send(`${readymsg} <@${client.config.botOwnerID}>`);
     });
 
     client.user.setPresence({
@@ -13,6 +13,6 @@ module.exports = (client) => {
             name: `${client.prefix}help`,
             type: 'LISTENING'
         }],
-        status: 'idle'
+        status: 'online'
     })
 }

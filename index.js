@@ -8,7 +8,7 @@ const client = new Discord.Client({ intents: [
     Discord.Intents.FLAGS.DIRECT_MESSAGES,
     Discord.Intents.FLAGS.GUILD_PRESENCES,
     Discord.Intents.FLAGS.GUILD_VOICE_STATES
-] 
+], partials: ["CHANNEL"]
 });
 const db = require("mongoose");
 const config = require('./config.json');

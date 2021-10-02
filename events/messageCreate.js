@@ -2,6 +2,18 @@ module.exports = (client, message) => {
 
     if (message.author.bot) return;
 
+    if (!message.guild) {
+
+        message.channel.send('Se ha enviado tu mensaje al desarrollador del bot, ten paciencia mientras espera respuesta. No use de forma incorrecta este método de contacto o será bloqueado.')
+
+        client.channels.fetch(client.config.informChannel)
+        .then(channel => {
+            channel.send(`DM message:\n\nUser: <@${message.author.id}>\nContent: ${message.content}\n\n<@${client.config.botOwnerID}>`);
+        });
+
+        return
+    }
+
     if (!message.content.toLowerCase().startsWith(client.prefix)) return;
 
     const args = message.content.split(/ +/g);

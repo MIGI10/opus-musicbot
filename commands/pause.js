@@ -28,14 +28,6 @@ module.exports.run = (client, message, args) => {
 
     serverQueue.songs[0].pauseTimestamps.push(pauseTimestamp);
 
-    client.user.setPresence({
-        activities: [{ 
-            name: `${client.prefix}help | Reproductor pausado`,
-            type: 'LISTENING'
-        }],
-        status: 'idle'
-    })
-
     message.channel.send(`Reproductor pausado, para reanudar \`${client.prefix}play\``)
 }
 

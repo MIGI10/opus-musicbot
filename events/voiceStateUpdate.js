@@ -11,14 +11,6 @@ module.exports = (client, oldState, newState) => {
             if (serverQueue.voiceChannel.members.size == 1 && oldState.id !== client.user.id) {
 
                 serverQueue.textChannel.send('Me he quedado solo :(, abandonando canal de voz');
-
-                client.user.setPresence({
-                    activities: [{ 
-                        name: `${client.prefix}help | Reproductor detenido`,
-                        type: 'LISTENING'
-                    }],
-                    status: 'idle'
-                })
             
                 serverQueue.connection.destroy();
                 client.queue.delete(oldState.guild.id);
@@ -28,14 +20,6 @@ module.exports = (client, oldState, newState) => {
         if (oldState.id == client.user.id && newState.channel !== oldState.channel) {
 
             if (!newState.channel) {
-
-                client.user.setPresence({
-                    activities: [{ 
-                        name: `${client.prefix}help | Reproductor detenido`,
-                        type: 'LISTENING'
-                    }],
-                    status: 'idle'
-                })
             
                 client.queue.delete(oldState.guild.id);
                 serverQueue.textChannel.send('Alguien me ha desconectado, se ha limpiado la cola');
