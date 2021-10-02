@@ -22,6 +22,7 @@ module.exports.run = async (client, message, args) => {
             songs: [],
             volume: 5,
             playing: false,
+            updating: false
         })
     }
 
@@ -117,6 +118,8 @@ module.exports.run = async (client, message, args) => {
 
                 const songs = await spotifyReq.run(client, message, args);
 
+                if (!songs.type) return;
+
                 let i = 1;
 
                 if (songs.type == 'playlist') {
@@ -126,6 +129,8 @@ module.exports.run = async (client, message, args) => {
                     } else {
                         message.channel.send(`Esta playlist supera el límite de canciones que se pueden añadir a la vez, solamente se han cargado 100 canciones de ${songs.total} y se están añadiendo a la cola`);  
                     }
+
+                    serverQueue.updating = true;
     
                     for (const song of songs) {
                         if (typeof song === 'string') {
@@ -134,6 +139,7 @@ module.exports.run = async (client, message, args) => {
     
                             if (i == (songs.length)) {
                                 message.channel.send(`Se han añadido ${i} canciones a la cola con éxito`);
+                                serverQueue.updating = false;
                             }
                             i++
                         }
@@ -145,7 +151,9 @@ module.exports.run = async (client, message, args) => {
                     } else {
                         message.channel.send(`Este album supera el límite de canciones que se pueden añadir a la vez, solamente se han cargado 50 canciones de ${songs.total} y se están añadiendo a la cola`);  
                     }
-    
+                    
+                    serverQueue.updating = true;
+
                     for (const song of songs) {
                         if (typeof song === 'string') {
     
@@ -153,6 +161,7 @@ module.exports.run = async (client, message, args) => {
     
                             if (i == (songs.length)) {
                                 message.channel.send(`Se han añadido ${i} canciones a la cola con éxito`);
+                                serverQueue.updating = false;
                             }
                             i++
                         }
@@ -325,7 +334,7 @@ module.exports.run = async (client, message, args) => {
 module.exports.help = {
     name: "play",
     description: "Conectar a un canal de voz y reproducir la canción solicitada, añadir una canción a la cola y para reanudar tras usar el comando de pausa",
-    usage: "Para conectar y reproducir o añadir una canción a la cola, escribir el nombre de la canción y artista seguido del comando. Para reanudar tras pausa, escribir solo el comando",
+    usage: "Para conectar y reproducir o añadir una canción a la cola, escribe el nombre o link de YouTube/Spotify de una canción. Para cargar una playlist o album de Spotify pega el link del mismo. Para reanudar tras pausa, escribe solo el comando.\n\nHay disponibles dos argumentos opcionales al cargar una playlist o un album de Spotify, el primero es el número de la canción que desea que sea la primera mientras que el segundo invierte el orden de la playlist al escribir `reverse`:\n\nplay [url] <número primera canción> <reverse>",
     alias: "p"
 }
 
