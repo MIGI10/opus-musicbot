@@ -11,6 +11,12 @@ module.exports.run = async (client, message, args) => {
         argsGiven = false;
     }
 
+    if (args[1] && !isNaN(args[1])) {
+        var offset = parseInt(args[1]);
+    } else {
+        var offset = 0;
+    }
+
     if (urlArray[3] == 'playlist' && urlArray[4]) {
          
         const spotifyId = urlArray[4].split('?')[0];
@@ -58,6 +64,8 @@ module.exports.run = async (client, message, args) => {
 
         songs.total = query.total;
         songs.type = 'playlist';
+        songs.offset = offset;
+
 
         return songs;
 
@@ -127,14 +135,14 @@ module.exports.run = async (client, message, args) => {
 
         songs.total = query.total;
         songs.type = 'album';
+        songs.offset = offset;
 
         return songs;
     }
 
     async function getPlaylist(spotifyId, args) {
 
-        if (args[1] && !isNaN(args[1])) {
-            const offset = parseInt(args[1]);
+        if (offset) {
             parameters = `fields=total,items(track(name%2Cartists(name)))&offset=${offset}`
         } else {
             parameters = 'fields=total,items(track(name%2Cartists(name)))'
@@ -168,8 +176,7 @@ module.exports.run = async (client, message, args) => {
 
     async function getAlbum(spotifyId, args) {
 
-        if (args[1] && !isNaN(args[1])) {
-            const offset = parseInt(args[1]);
+        if (offset) {
             parameters = `limit=50&offset=${offset}`
         } else {
             parameters = 'limit=50'

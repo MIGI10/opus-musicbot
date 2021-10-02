@@ -123,7 +123,7 @@ module.exports.run = async (client, message, args) => {
 
                 if (songs.type == 'playlist') {
 
-                    if (songs.total <= 100) {
+                    if (songs.total - songs.offset <= 100) {
                         message.channel.send(`${songs.length} canciones han sido cargadas y se están añadiendo a la cola`);
                     } else {
                         message.channel.send(`Esta playlist supera el límite de canciones que se pueden añadir a la vez, solamente se han cargado 100 canciones de ${songs.total} y se están añadiendo a la cola`);  
@@ -145,10 +145,10 @@ module.exports.run = async (client, message, args) => {
                     }
                 } else if (songs.type == 'album') {
 
-                    if (songs.total <= 50) {
+                    if (songs.total - songs.offset <= 50) {
                         message.channel.send(`${songs.length} canciones han sido cargadas y se están añadiendo a la cola`);
                     } else {
-                        message.channel.send(`Este album supera el límite de canciones que se pueden añadir a la vez, solamente se han cargado 50 canciones de ${songs.total} y se están añadiendo a la cola`);  
+                        message.channel.send(`Esta playlist supera el límite de canciones que se pueden añadir a la vez, solamente se han cargado 100 canciones de ${songs.total} y se están añadiendo a la cola`);  
                     }
                     
                     serverQueue.updating = true;
