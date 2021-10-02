@@ -79,7 +79,7 @@ module.exports.run = async (client, message, args) => {
         } else {
             
             if (serverQueue.playing) {
-                client.queue.delete(queue.textChannel.guild.id);
+                client.queue.delete(serverQueue.textChannel.guild.id);
                 serverQueue.textChannel.send('No hay más canciones en la cola, canal de voz abandonado')
                 return serverQueue.connection.destroy();
             }
