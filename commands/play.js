@@ -21,6 +21,7 @@ module.exports.run = async (client, message, args) => {
             songs: [],
             volume: 5,
             playing: false,
+            updating: false
         })
     }
 
@@ -127,6 +128,8 @@ module.exports.run = async (client, message, args) => {
                     } else {
                         message.channel.send(`Esta playlist supera el límite de canciones que se pueden añadir a la vez, solamente se han cargado 100 canciones de ${songs.total} y se están añadiendo a la cola`);  
                     }
+
+                    serverQueue.updating = true;
     
                     for (const song of songs) {
                         if (typeof song === 'string') {
@@ -135,6 +138,7 @@ module.exports.run = async (client, message, args) => {
     
                             if (i == (songs.length)) {
                                 message.channel.send(`Se han añadido ${i} canciones a la cola con éxito`);
+                                serverQueue.updating = false;
                             }
                             i++
                         }
@@ -146,7 +150,9 @@ module.exports.run = async (client, message, args) => {
                     } else {
                         message.channel.send(`Este album supera el límite de canciones que se pueden añadir a la vez, solamente se han cargado 50 canciones de ${songs.total} y se están añadiendo a la cola`);  
                     }
-    
+                    
+                    serverQueue.updating = true;
+
                     for (const song of songs) {
                         if (typeof song === 'string') {
     
@@ -154,6 +160,7 @@ module.exports.run = async (client, message, args) => {
     
                             if (i == (songs.length)) {
                                 message.channel.send(`Se han añadido ${i} canciones a la cola con éxito`);
+                                serverQueue.updating = false;
                             }
                             i++
                         }

@@ -20,6 +20,10 @@ module.exports.run = async (client, message, args) => {
 
     const usersConnected = serverQueue.voiceChannel.members.size - 1;
 
+    if (serverQueue.updating) {
+        return message.reply('Se están añadiendo canciones a la cola, debes esperar a que termine para poder limpiar la cola');
+    }
+
     const guildSaved = await client.db.guild.findOne({ 
         id: message.guild.id,
     }).catch(err => console.log(err));
