@@ -6,7 +6,7 @@ module.exports.run = async (client, message, args) => {
 
     if (!guildSaved) {
         if (message.member.permissions.has('MANAGE_MESSAGES', true)) {
-            message.channel.send(`¡Gracias por añadirme a ${message.guild.name}!\n\nAntes de poder funcionar en el servidor, necesito que envíes por aquí la ID del rol de moderadores (los usuarios con este rol podrán utilizar \`${client.prefix}clear\` y \`${client.prefix}forceskip\` sin restricción aunque haya más de una persona conectada). En caso de no saber copiar la ID del rol, consulta este artículo: https://docs.discordsafe.com/docs/ayuda/copiar-ids`)
+            message.channel.send(`¡Gracias por añadirme a **${message.guild.name}**!\n\nAntes de poder funcionar en el servidor, necesito que envíes por aquí la ID del rol de moderadores (los usuarios con este rol podrán utilizar \`${client.prefix}clear\` y \`${client.prefix}forceskip\` sin restricción aunque haya más de una persona conectada). En caso de no saber copiar la ID del rol, consulta este artículo: https://docs.discordsafe.com/docs/ayuda/copiar-ids`)
             
             let filter = m => m.author.id == message.author.id && m.content.split(' ')[0].length > 15;
 
