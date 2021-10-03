@@ -48,8 +48,18 @@ module.exports.run = async (client, message, args) => {
                     return message.reply('¡Debes especificar una canción para iniciar el reproductor!')
                 } else {
                     preQueue(args, message);
-                    setTimeout(function() {
-                        play(serverQueue.songs[0], serverQueue, client);
+                    setTimeout(async function() {
+                        await play(serverQueue.songs[0], serverQueue, client);
+
+                        serverQueue.player.once("error", (error) => {
+                            let errorCode = Math.floor(Math.random()*1000);
+                            console.log(`--------- Internal error code: ${errorCode} ---------`);
+                            console.error(error);
+                            message.channel.send(`ERROR: Ha ocurrido un error interno, si el problema persiste envíame un mensaje privado y proporciona el siguiente código de error: \`${errorCode}\``);
+                    
+                            client.queue.delete(serverQueue.textChannel.guild.id);
+                            return serverQueue.connection.destroy();
+                        });
                     }, 3000);
                     return
                 }
@@ -93,8 +103,18 @@ module.exports.run = async (client, message, args) => {
 
             serverQueue.connection = connection;
 
-            setTimeout(function() {
-                play(serverQueue.songs[0], serverQueue, client);
+            setTimeout(async function() {
+                await play(serverQueue.songs[0], serverQueue, client);
+
+                serverQueue.player.once("error", (error) => {
+                    let errorCode = Math.floor(Math.random()*1000);
+                    console.log(`--------- Internal error code: ${errorCode} ---------`);
+                    console.error(error);
+                    message.channel.send(`ERROR: Ha ocurrido un error interno, si el problema persiste envíame un mensaje privado y proporciona el siguiente código de error: \`${errorCode}\``);
+            
+                    client.queue.delete(serverQueue.textChannel.guild.id);
+                    return serverQueue.connection.destroy();
+                });
             }, 3000);
         } catch (err) {
                 client.queue.delete(message.guild.id);
@@ -315,16 +335,6 @@ module.exports.run = async (client, message, args) => {
                     return queue.connection.destroy();
                 }
             }
-        });
-    
-        queue.player.once("error", (error) => {
-            let errorCode = Math.floor(Math.random()*1000);
-            console.log(`--------- Internal error code: ${errorCode} ---------`);
-            console.error(error);
-            message.channel.send(`ERROR: Ha ocurrido un error interno, si el problema persiste envíame un mensaje privado y proporciona el siguiente código de error: \`${errorCode}\``);
-    
-            client.queue.delete(queue.textChannel.guild.id);
-            return queue.connection.destroy();
         });
     
         queue.textChannel.send(`Reproduciendo **${song.title}** [${song.duration}] || Solicitado por \`${song.requesterUsertag}\``);
