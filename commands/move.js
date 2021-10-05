@@ -37,7 +37,7 @@ module.exports.run = (client, message, args) => {
     serverQueue.songs.splice(songNum, 1);
     serverQueue.songs.splice(posNum, 0, songToMove);
 
-    message.channel.send(`**${songToMove.title}** ha sido movido a la posición ${posNum} de ${serverQueue.songs.length - 1}`)
+    message.channel.send(`**${songToMove.title}** ha sido movido de la posición ${songNum} a la posición **${posNum}** de ${serverQueue.songs.length - 1}`)
 }
 
 module.exports.help = {
