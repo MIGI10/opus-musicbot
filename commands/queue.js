@@ -242,16 +242,23 @@ module.exports.run = async (client, message, args) => {
 
         queueEmbed.setFooter(`Página 1 de ${Math.ceil(totalSongsQuotient)}`)
 
-        await int.update({ embeds: [queueEmbed], components: [row] });
+        return await int.update({ embeds: [queueEmbed], components: [row] });
     }
 
     async function lastPage(int) {
+
+        if (serverQueue.updating) {
+            int.reply('La cola está siendo actualizada, espere a que finalice para ver la última página correctamente');
+            return setTimeout(() => { 
+                int.deleteReply(); 
+            }, 5000)
+        }
 
         queueEmbed = await nowPlaying(serverQueue, message);
 
         const totalSongs = serverQueue.songs.length - 1;
         const totalSongsQuotient = totalSongs / 6;
-        const firstSongInPage = (6 * Math.floor(totalSongsQuotient)) + 1;
+        const firstSongInPage = (6 * Math.ceil(totalSongsQuotient - 1)) + 1;
 
         for (let i = firstSongInPage; totalSongs >= i; i++) {
             queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, `Solicitado por ${serverQueue.songs[i].requesterUsertag}`)
@@ -259,7 +266,7 @@ module.exports.run = async (client, message, args) => {
 
         queueEmbed.setFooter(`Página ${Math.ceil(totalSongsQuotient)} de ${Math.ceil(totalSongsQuotient)}`)
 
-        await int.update({ embeds: [queueEmbed], components: [row] });
+        return await int.update({ embeds: [queueEmbed], components: [row] });
     }
 }
 
