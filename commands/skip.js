@@ -1,6 +1,4 @@
-const playFile = require('./play');
-const youtubedl = require('youtube-dl-exec').raw;
-
+const ytdl = require('ytdl-core');
 
 module.exports.run = async (client, message, args) => {
 
@@ -61,15 +59,16 @@ module.exports.run = async (client, message, args) => {
     
             const song = serverQueue.songs[0];
 
-            const stream = youtubedl(song.url, {
-                o: '-',
-                q: '',
-                f: 'bestaudio[ext=webm+acodec=opus+asr=48000]/bestaudio',
-                r: '100K',
-              }, { stdio: ['ignore', 'pipe', 'ignore'] });
+            const option = {
+                filter: "audioonly",
+                highWaterMark: 1 << 25,
+            };
+            const stream = await ytdl(song.url, option);
     
-            const resource = voice.createAudioResource(stream.stdout);
-    
+            const resource = voice.createAudioResource(stream, {
+                metadata: song
+            });
+
             serverQueue.player.play(resource);
 
             song.timeAtPlay = Date.now();
