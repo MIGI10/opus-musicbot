@@ -7,8 +7,8 @@ module.exports.run = (client, message, args) => {
         const commandEmbed = new client.discordjs.MessageEmbed()
             .setTitle(`Help | Command`)
             .setDescription(`**Nombre:** ${cmd.help.name}\n\n **Descripción:** ${cmd.help.description}\n\n **Uso:** ${cmd.help.usage}\n\n **Alias:** ${cmd.help.alias}`)
-            .setColor('#00f5ff')
-            .setFooter('Opus Music Bot v1.0.0 · Desarrollado por migi28#7731', client.user.displayAvatarURL({dynamic: true, size: 1024}))
+            .setColor(65453)
+            .setFooter(`Opus Music Bot v${client.config.version} · Desarrollado por migi28#7731`, client.user.displayAvatarURL({dynamic: true, size: 1024}))
         
         message.channel.send({ embeds: [commandEmbed]})
     
@@ -19,10 +19,13 @@ module.exports.run = (client, message, args) => {
         commandsArray.splice(commandsArray.indexOf('eval'), 1)
 
         const helpEmbed = new client.discordjs.MessageEmbed()
-            .setTitle(`Help | Command List`)
-            .setDescription(commandsArray.join(', ') + `\n\nPara ver más información de un comando: \`${client.prefix}help\` *comando*` + '\n\nPara invitarme a un servidor: https://bit.ly/opusmusicbot' + '\n\nPara soporte envíame un mensaje privado [<@792129524153712660>] detallando tu problema')
-            .setColor('#00f5ff')
-            .setFooter('Opus Music Bot v1.0.0 · Desarrollado por migi28#7731', client.user.displayAvatarURL({dynamic: true, size: 1024}))
+            .setTitle(`Help | Opus Music Bot`)
+            .setColor(65453)
+            .addField('Commands', commandsArray.join(', '))
+            .addField('Command Help', `Para ver más información de un comando: \`${client.prefix}help\``)
+            .addField('Invite Link', 'Para invitarme a un servidor: https://bit.ly/opusmusicbot')
+            .addField('Support', `Para soporte envíame un mensaje privado [<@${client.user.id}>] detallando tu problema`)
+            .setFooter(`Opus Music Bot v${client.config.version} · Desarrollado por migi28#7731`, client.user.displayAvatarURL({dynamic: true, size: 1024}))
         
         message.channel.send({ embeds: [helpEmbed]})
     }
