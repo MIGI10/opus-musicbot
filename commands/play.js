@@ -84,7 +84,6 @@ module.exports.run = async (client, message, args) => {
         const textChannel = message.channel;
         serverQueue.textChannel = textChannel;
 
-        preQueue(args, message);
         message.channel.send(`Conectando a <#${voiceChannel.id}>, ahora solo responderé comandos ejecutados aquí`);
 
         const permissions = voiceChannel.permissionsFor(message.guild.me);
@@ -92,6 +91,8 @@ module.exports.run = async (client, message, args) => {
             client.queue.delete(message.guild.id);
             return message.channel.send('ERROR: Necesito el permiso de `VER CANAL`, `CONECTAR` y `HABLAR` para funcionar correctamente!');
         }
+
+        preQueue(args, message);
 
         try {
             var connection = voice.joinVoiceChannel({
