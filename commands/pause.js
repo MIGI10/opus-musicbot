@@ -7,7 +7,7 @@ module.exports.run = (client, message, args) => {
     const serverQueue = client.queue.get(message.guild.id);
 
     if (message.channel !== serverQueue.textChannel) {
-        return message.reply(`Estoy actualmente en uso en <#${serverQueue.voiceChannel.id}> y <#${serverQueue.textChannel.id}>`)
+        return message.reply(`Estoy actualmente en uso en <#${serverQueue.voiceChannel.id}> y <#${serverQueue.textChannel.id}>, puedes usar \`${client.prefix}transfer\` para cambiar el canal de texto de la sesión`)
     }
 
     if (!message.member.voice.channel || message.member.voice.channel != serverQueue.voiceChannel) {
