@@ -12,12 +12,17 @@ module.exports.run = (client, message, args) => {
 
     if (message.channel !== serverQueue.textChannel) {
 
+        const permissions = message.channel.permissionsFor(message.guild.me);
+        if (!permissions.has("VIEW_CHANNEL") || !permissions.has("SEND_MESSAGES")) {
+            return serverQueue.textChannel.send(`ERROR: Necesito el permiso de \`VER CANAL\` y \`ENVIAR MENSAJES\` en <#${message.channel.id}> <@${message.author.id}>`);
+        }
+
         serverQueue.textChannel.send(`<@${message.author.id}> ha cambiado el canal de texto de la sesión, ahora solo responderé comandos ejecutados en <#${message.channel.id}>`);
         message.channel.send('Ahora responderé únicamente comandos ejecutados aquí');
         serverQueue.textChannel = message.channel;
 
     } else {
-        console.log(message.mentions.channels)
+
         if (message.mentions.channels.first()) {
 
             const mentionedChannel = message.mentions.channels.first();
@@ -27,6 +32,12 @@ module.exports.run = (client, message, args) => {
                 message.reply('¡Ese canal es el canal asignado actualmente!');
 
             } else {
+
+                const permissions = mentionedChannel.permissionsFor(message.guild.me);
+                if (!permissions.has("VIEW_CHANNEL") || !permissions.has("SEND_MESSAGES")) {
+                    return message.reply('ERROR: Necesito el permiso de `VER CANAL` y `ENVIAR MENSAJES` en ese canal');
+                }
+
                 message.channel.send(`Ahora responderé únicamente comandos ejecutados en <#${mentionedChannel.id}>`);
                 serverQueue.textChannel = mentionedChannel;
             }
