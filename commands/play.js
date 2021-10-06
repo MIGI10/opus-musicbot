@@ -1,15 +1,17 @@
 const youtubeSearch = require('youtube-search-api');
-const youtubedl = require('youtube-dl-exec').raw;
 const spotifyReq = require('../spotify/req-content');
 const ytdl = require('ytdl-core');
+const youtubedl = require('youtube-dl-exec').raw;
+const fs = require("fs");
+const path = require('path');
 
 module.exports.run = async (client, message, args) => {
 
-    const guildConfigured = await client.db.guild.findOne({ 
+    const guildInfo = await client.db.guild.findOne({ 
         id: message.guild.id,
     }).catch(err => console.log(err));
 
-    if (!guildConfigured) return message.channel.send(`No he sido configurado todavía, un usuario con permisos debe ejecutar \`${client.prefix}config\``)
+    if (!guildInfo) return message.channel.send(`No he sido configurado todavía, un usuario con permisos debe ejecutar \`${client.prefix}config\``)
 
     voice = client.discordjsvoice
 
@@ -22,7 +24,9 @@ module.exports.run = async (client, message, args) => {
             songs: [],
             volume: 5,
             playing: false,
-            updating: false
+            updating: false,
+            shuffle: false,
+            loop: false
         })
     }
 
@@ -49,17 +53,7 @@ module.exports.run = async (client, message, args) => {
                 } else {
                     preQueue(args, message);
                     setTimeout(async function() {
-                        await play(serverQueue.songs[0], serverQueue, client);
-
-                        serverQueue.player.once("error", (error) => {
-                            let errorCode = Math.floor(Math.random()*1000);
-                            console.log(`--------- Internal error code: ${errorCode} ---------`);
-                            console.error(error);
-                            message.channel.send(`ERROR: Ha ocurrido un error interno, si el problema persiste envíame un mensaje privado y proporciona el siguiente código de error: \`${errorCode}\``);
-                    
-                            client.queue.delete(serverQueue.textChannel.guild.id);
-                            return serverQueue.connection.destroy();
-                        });
+                        await play(serverQueue.songs[0], serverQueue, false);
                     }, 3000);
                     return
                 }
@@ -71,7 +65,12 @@ module.exports.run = async (client, message, args) => {
                     message.channel.send('Reproductor reanudado')
             }
         } else {
-            return preQueue(args, message);
+
+            if (!args[0]) {
+                return message.reply('¡Debes especificar una canción para añadirla a la cola!');
+            } else {
+                return preQueue(args, message);
+            }
         }
     } else {
 
@@ -104,25 +103,88 @@ module.exports.run = async (client, message, args) => {
             serverQueue.connection = connection;
 
             setTimeout(async function() {
-                await play(serverQueue.songs[0], serverQueue, client);
 
-                serverQueue.player.once("error", (error) => {
+                if (!serverQueue.songs[0]) return;
+
+                await play(serverQueue.songs[0], serverQueue, false);
+
+                serverQueue.player.on("error", async (error) => {
+
+                    const idleFunction = serverQueue.player.listeners(voice.AudioPlayerStatus.Idle)[0];
+                    serverQueue.player.removeListener(voice.AudioPlayerStatus.Idle, idleFunction);
+
                     let errorCode = Math.floor(Math.random()*1000);
-                    console.log(`--------- Internal error code: ${errorCode} ---------`);
+                    const errorHeader = `--------- Internal error code: 20-${errorCode} ---------`;
+                    console.log(errorHeader);
                     console.error(error);
-                    message.channel.send(`ERROR: Ha ocurrido un error interno, si el problema persiste envíame un mensaje privado y proporciona el siguiente código de error: \`${errorCode}\``);
-            
-                    client.queue.delete(serverQueue.textChannel.guild.id);
-                    return serverQueue.connection.destroy();
+
+                    const writeStream = fs.createWriteStream(path.join(
+                        __dirname,
+                        "..",
+                        "logs",
+                        `${new Date().toISOString()}.log`
+                    ));
+
+                    writeStream.write(`${errorHeader}\n\n${error.stack}\n\n${error.info}\n\n${guildInfo}\n\n${serverQueue}`);
+
+                    writeStream.on('error', (err) => {
+                        console.error(err)
+                    });
+
+                    writeStream.end();
+                    
+                    /*
+                    fs.appendFileSync(path.join(
+                        __dirname,
+                        "..",
+                        "logs",
+                        `${new Date().toISOString()}.log`
+                    ), JSON.stringify(errorHeader, null, 2) + "\n\n" + JSON.stringify(error, null, 2) + "\n\n" + JSON.stringify(guildInfo, null, 2) + "\n\n" + JSON.stringify(serverQueue, null, 2));
+                    */
+
+                    /*
+                        message.channel.send(`ERROR: No se ha podido reproducir la canción debido a un error interno, puedes reportar este error enviándome un mensaje privado y proporcionando el siguiente código de error: \`20-${errorCode}\``);
+                        client.queue.delete(serverQueue.textChannel.guild.id);
+                        return serverQueue.connection.destroy();
+                    */
+
+                    if (error.message.includes('403')) { // Temporal solution to random 403 errors from ytdl-core bug
+
+                        await play(error.resource.metadata, serverQueue, true);
+
+                    } else {
+
+                        message.channel.send(`ERROR: No se ha podido reproducir la canción debido a un error, puedes reportar este error enviándome un mensaje privado y proporcionando el siguiente código de error: \`20-${errorCode}\``);
+                        return idleFunction();
+                    }
                 });
             }, 3000);
+
         } catch (err) {
-                client.queue.delete(message.guild.id);
-                let errorCode = Math.floor(Math.random()*1000);
-                console.log(`--------- Internal error code: ${errorCode} ---------`);
-                console.log(err);
-                return message.channel.send(`ERROR: Ha ocurrido un error interno, si el problema persiste envíame un mensaje privado y proporciona el siguiente código de error: \`${errorCode}\``);
-            }
+
+            client.queue.delete(message.guild.id);
+            let errorCode = Math.floor(Math.random()*1000);
+            const errorHeader = `--------- Internal error code: 30-${errorCode} ---------`;
+            console.log(errorHeader);
+            console.error(err);
+
+            const writeStream = fs.createWriteStream(path.join(
+                __dirname,
+                "..",
+                "logs",
+                `${new Date().toISOString()}.log`
+            ));
+
+            writeStream.write(`${errorHeader}\n\n${error.stack}\n\n${guildInfo}\n\n${serverQueue}`);
+
+            writeStream.on('error', (err) => {
+                console.error(err)
+            });
+
+            writeStream.end();
+
+            return message.channel.send(`ERROR: Ha ocurrido un error interno, puedes reportar este error enviándome un mensaje privado y proporcionando el siguiente código de error: \`30-${errorCode}\``);
+        }
     }
 
     async function preQueue(args, message) {
@@ -130,6 +192,7 @@ module.exports.run = async (client, message, args) => {
         if (!args[0].startsWith('http:') && !args[0].startsWith('https:') && !args[0].startsWith('www.') && !args[0].startsWith('open.') && !args[0].startsWith('youtube.')) {
 
             await queue(args.join(' '), message.author.id, message.author.tag);
+            if (!serverQueue.songs[0]) return;
             message.channel.send(`**${serverQueue.songs[serverQueue.songs.length - 1].title}** [${serverQueue.songs[serverQueue.songs.length - 1].duration}] ha sido añadido a la cola`);
         
         } else {
@@ -211,9 +274,14 @@ module.exports.run = async (client, message, args) => {
     async function queue(songName, requesterId, requesterUsertag) {
 
         const videoList = await youtubeSearch.GetListByKeyword(songName, false);
-        const video = videoList.items[0];
 
-        if (video.type !== 'video') return
+        let i = 0;
+        video = videoList.items[0];
+
+        while (videoList.items[i].type !== 'video' || videoList.items[i].isLive) {
+            video = videoList.items[i + 1];
+            i++;
+        }
 
         const length = video.length.simpleText;
         let durationArray = length.split(':');
@@ -268,7 +336,7 @@ module.exports.run = async (client, message, args) => {
         }
 
         const song = {
-            title: video.title,
+            title: video.title.replaceAll(`||`, `\\||`),
             duration: duration,
             durationSeconds: totalDurationSeconds,
             timeAtPlay: null,
@@ -281,7 +349,7 @@ module.exports.run = async (client, message, args) => {
         return serverQueue.songs.push(song);
     }
 
-    async function play(song, queue, client) {
+    async function play(song, queue, error) {
 
         queue.playing = true
     
@@ -296,48 +364,86 @@ module.exports.run = async (client, message, args) => {
             queue.player = player;
         }
 
-        const option = {
-            filter: "audioonly",
-            highWaterMark: 1 << 25,
-        };
-        const stream = await ytdl(song.url, option);
+        if (!error) {
 
-        const resource = voice.createAudioResource(stream);
+            const option = {
+                filter: "audioonly",
+                highWaterMark: 1 << 25,
+            };
+            const stream = await ytdl(song.url, option);
+    
+            var resource = voice.createAudioResource(stream, {
+                metadata: song
+            });
 
-        /*
-        const stream = youtubedl(song.url, {
-            o: '-',
-            q: '',
-            f: 'bestaudio[ext=webm+acodec=opus+asr=48000]/bestaudio',
-            r: '100K',
-          }, { stdio: ['ignore', 'pipe', 'ignore'] });
-    
-        const resource = voice.createAudioResource(stream.stdout);
-        */
-    
+        } else {
+
+            const stream = youtubedl(song.url, {
+                o: '-',
+                q: '',
+                f: 'bestaudio[ext=webm+acodec=opus+asr=48000]/bestaudio',
+                r: '100K',
+              }, { stdio: ['ignore', 'pipe', 'ignore'] });
+        
+            var resource = voice.createAudioResource(stream.stdout, {
+                metadata: song
+            });
+        }
+
         queue.player.play(resource);
     
         const dispatcher = queue.connection
             .subscribe(queue.player)
     
         song.timeAtPlay = Date.now();
+        song.pauseTimestamps = [];
+
+        if (!error) {
+            queue.textChannel.send(`Reproduciendo **${song.title}** [${song.duration}] || Solicitado por \`${song.requesterUsertag}\``);
+        }
     
         queue.player.once(voice.AudioPlayerStatus.Idle, () => {
-    
-            queue.songs.shift();
-            if (queue.songs.length >= 1) {
-                return play(queue.songs[0], queue, client);
+
+            if (queue.loop) {
+
+                return play(queue.songs[0], queue, false);
+
             } else {
-    
-                if (queue.playing) {
-                    client.queue.delete(queue.textChannel.guild.id);
-                    queue.textChannel.send('No hay más canciones en la cola, canal de voz abandonado')
-                    return queue.connection.destroy();
+
+                queue.songs.shift();
+
+                if (queue.songs.length >= 1) {
+
+                    if (queue.shuffle) {
+        
+                        const totalSongs = queue.songs.length;
+                        let randomSong = Math.floor(Math.random() * (totalSongs + 1)) - 1;
+
+                        if (randomSong < 0) {
+                            randomSong = 0;
+                        }    
+        
+                        var songToMove = serverQueue.songs[randomSong];
+                        serverQueue.songs.splice(randomSong, 1);
+                        serverQueue.songs.splice(0, 0, songToMove);
+        
+                        return play(queue.songs[0], queue, false);
+
+                    } else {
+
+                        return play(queue.songs[0], queue, false);
+                    }
+                
+                } else {
+        
+                    if (queue.playing) {
+                        client.queue.delete(queue.textChannel.guild.id);
+                        queue.textChannel.send('No hay más canciones en la cola, canal de voz abandonado')
+                        return queue.connection.destroy();
+                    }
                 }
             }
         });
-    
-        queue.textChannel.send(`Reproduciendo **${song.title}** [${song.duration}] || Solicitado por \`${song.requesterUsertag}\``);
     }
 }
 
