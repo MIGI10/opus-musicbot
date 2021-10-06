@@ -97,8 +97,9 @@ module.exports.run = async (client, message, args) => {
 
     const nowPlayingEmbed = new client.discordjs.MessageEmbed()
         .setTitle(`Ahora Suena`)
-        .setDescription(`Loop: ${loopStatus} | Shuffle: ${shuffleStatus}\n\nSolicitado por ${serverQueue.songs[0].requesterUsertag}\n\`\`\`nim\n${serverQueue.songs[0].title}\n\n${timeBar}\n\`\`\``)
+        .setDescription(`Solicitado por ${serverQueue.songs[0].requesterUsertag}\n\`\`\`nim\n${serverQueue.songs[0].title}\n\n${timeBar}\n\`\`\``)
         .setColor(65453)
+        .setFooter(`Loop: ${loopStatus} | Shuffle: ${shuffleStatus}`)
     
 
     message.channel.send({ embeds: [nowPlayingEmbed]})
