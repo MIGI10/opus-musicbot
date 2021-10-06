@@ -81,7 +81,7 @@ module.exports.run = async (client, message, args) => {
 
                 } else if (int.customId === 'back_page') {
 
-                    const previousFirstSong = parseInt(int.message.embeds[0].fields[0].name.split('.')[0])
+                    const previousFirstSong = parseInt(int.message.embeds[0].fields[1].name.split('.')[0])
                     const firstSongInPage = previousFirstSong - 6;
                     const totalSongs = serverQueue.songs.length - 1;
                     const totalSongsQuotient = totalSongs / 6;
@@ -105,7 +105,7 @@ module.exports.run = async (client, message, args) => {
 
                 } else if (int.customId === 'next_page') {
 
-                    const previousFirstSong = parseInt(int.message.embeds[0].fields[0].name.split('.')[0])
+                    const previousFirstSong = parseInt(int.message.embeds[0].fields[1].name.split('.')[0])
                     const firstSongInPage = previousFirstSong + 6;
                     const totalSongs = serverQueue.songs.length - 1;
                     const totalSongsQuotient = totalSongs / 6;
@@ -150,6 +150,18 @@ module.exports.run = async (client, message, args) => {
     }
 
     async function nowPlaying(queue, message) {
+
+        if (queue.loop) {
+            loopStatus = '🟢';
+        } else {
+            loopStatus = '🔴';
+        }
+
+        if (queue.shuffle) {
+            shuffleStatus = '🟢';
+        } else {
+            shuffleStatus = '🔴';
+        }
 
         if (!queue.playing) {
             scrubberEmoji = '⏸';
@@ -222,8 +234,9 @@ module.exports.run = async (client, message, args) => {
 
         const queueEmbed = new client.discordjs.MessageEmbed()
             .setTitle(`Cola de ${message.guild.name}`)
-            .setDescription(`**Ahora Suena:**\nSolicitado por ${queue.songs[0].requesterUsertag}\n\`\`\`nim\n${queue.songs[0].title}\n\n${timeBar}\n\`\`\``)
-            .setColor('#00f5ff')
+            .setDescription(`Loop: ${loopStatus} | Shuffle: ${shuffleStatus}`)
+            .addField('**Ahora Suena:**', `Solicitado por ${queue.songs[0].requesterUsertag}\n\`\`\`nim\n${queue.songs[0].title}\n\n${timeBar}\n\`\`\``)
+            .setColor(65453)
             .setFooter(`Página 1 de ${totalPages}`)
 
         return queueEmbed;

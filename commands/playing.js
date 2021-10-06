@@ -18,6 +18,18 @@ module.exports.run = async (client, message, args) => {
         return message.reply('No hay nada sonando ahora mismo')
     }
 
+    if (serverQueue.loop) {
+        loopStatus = '🟢';
+    } else {
+        loopStatus = '🔴';
+    }
+
+    if (serverQueue.shuffle) {
+        shuffleStatus = '🟢';
+    } else {
+        shuffleStatus = '🔴';
+    }
+
     if (!serverQueue.playing) {
         scrubberEmoji = '⏸';
     } else {
@@ -85,8 +97,8 @@ module.exports.run = async (client, message, args) => {
 
     const nowPlayingEmbed = new client.discordjs.MessageEmbed()
         .setTitle(`Ahora Suena`)
-        .setDescription(`Solicitado por ${serverQueue.songs[0].requesterUsertag}\n\`\`\`nim\n${serverQueue.songs[0].title}\n\n${timeBar}\n\`\`\``)
-        .setColor('#00f5ff')
+        .setDescription(`Loop: ${loopStatus} | Shuffle: ${shuffleStatus}\n\nSolicitado por ${serverQueue.songs[0].requesterUsertag}\n\`\`\`nim\n${serverQueue.songs[0].title}\n\n${timeBar}\n\`\`\``)
+        .setColor(65453)
     
 
     message.channel.send({ embeds: [nowPlayingEmbed]})
