@@ -22,7 +22,7 @@ module.exports.run = (client, message, args) => {
             .setTitle(`Help | Opus Music Bot`)
             .setColor(65453)
             .addField('Commands', commandsArray.join(', '))
-            .addField('Command Help', `Para ver más información de un comando: \`${client.prefix}help\``)
+            .addField('Command Help', `Para ver más información de un comando: \`${client.prefix}help <comando>\``)
             .addField('Invite Link', 'Para invitarme a un servidor: https://bit.ly/opusmusicbot')
             .addField('Support', `Para soporte envíame un mensaje privado [<@${client.user.id}>] detallando tu problema`)
             .setFooter(`Opus Music Bot v${client.config.version} · Desarrollado por migi28#7731`, client.user.displayAvatarURL({dynamic: true, size: 1024}))
