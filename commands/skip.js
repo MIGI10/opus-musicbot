@@ -52,37 +52,66 @@ module.exports.run = async (client, message, args) => {
     }
 
     async function skip() {
-        
-        serverQueue.songs.shift();
 
-        if (serverQueue.songs.length >= 1) {
-    
-            const song = serverQueue.songs[0];
+        if (serverQueue.loop) {
 
-            const option = {
-                filter: "audioonly",
-                highWaterMark: 1 << 25,
-            };
-            const stream = await ytdl(song.url, option);
-    
-            const resource = voice.createAudioResource(stream, {
-                metadata: song
-            });
+            return play(serverQueue.songs[0]);
 
-            serverQueue.player.play(resource);
-
-            song.timeAtPlay = Date.now();
-
-            serverQueue.textChannel.send(`Reproduciendo **${song.title}** [${song.duration}] || Solicitado por \`${song.requesterUsertag}\``);
-    
         } else {
-            
-            if (serverQueue.playing) {
-                client.queue.delete(serverQueue.textChannel.guild.id);
-                serverQueue.textChannel.send('No hay más canciones en la cola, canal de voz abandonado')
-                return serverQueue.connection.destroy();
+
+            serverQueue.songs.shift();
+
+            if (serverQueue.songs.length >= 1) {
+
+                if (serverQueue.shuffle) {
+
+                    const totalSongs = serverQueue.songs.length;
+                    let randomSong = Math.floor(Math.random() * (totalSongs + 1)) - 1;
+
+                    if (randomSong < 0) {
+                        randomSong = 0;
+                    }
+
+                    var songToMove = serverQueue.songs[randomSong];
+                    serverQueue.songs.splice(randomSong, 1);
+                    serverQueue.songs.splice(0, 0, songToMove);
+
+                    return play(serverQueue.songs[0]);
+
+                } else {
+
+                    return play(serverQueue.songs[0]);
+                }
+        
+            } else {
+                
+                if (serverQueue.playing) {
+                    client.queue.delete(serverQueue.textChannel.guild.id);
+                    serverQueue.textChannel.send('No hay más canciones en la cola, canal de voz abandonado')
+                    return serverQueue.connection.destroy();
+                }
             }
         }
+    }
+
+    async function play(song) {
+
+        const option = {
+            filter: "audioonly",
+            highWaterMark: 1 << 25,
+        };
+        const stream = await ytdl(song.url, option);
+
+        const resource = voice.createAudioResource(stream, {
+            metadata: song
+        });
+
+        serverQueue.player.play(resource);
+
+        song.timeAtPlay = Date.now();
+        song.pauseTimestamps = [];
+
+        serverQueue.textChannel.send(`Reproduciendo **${song.title}** [${song.duration}] || Solicitado por \`${song.requesterUsertag}\``);
     }
 }
 
