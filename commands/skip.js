@@ -24,19 +24,19 @@ module.exports.run = async (client, message, args) => {
 
     const usersConnected = serverQueue.voiceChannel.members.size - 1;
 
-    if (usersConnected == 1) {
+    if (usersConnected <= 2) {
 
         await skip();
 
     } else {
 
-        message.channel.send(`Para saltar la canción actual, ${(Math.ceil(usersConnected*0,5))-1} personas más de las ${usersConnected} conectadas deben enviar \`${client.prefix}skip\` en menos de 20 segundos.`);
+        message.channel.send(`Para saltar la canción actual, ${(Math.ceil(usersConnected*0.5))-1} personas más de las ${usersConnected} conectadas deben enviar \`${client.prefix}skip\` en menos de 20 segundos.`);
 
         let filter = m => m.content.split(' ')[0] == `${client.prefix}skip` && m.author.id !== message.author.id && m.member.voice.channel && m.member.voice.channel == serverQueue.voiceChannel;
 
         message.channel.awaitMessages({
             filter,
-            max: ((Math.ceil(usersConnected*0,5))-1),
+            max: ((Math.ceil(usersConnected*0.5))-1),
             time: 20000,
             errors: ['time']
         })

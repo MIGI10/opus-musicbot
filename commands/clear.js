@@ -28,24 +28,24 @@ module.exports.run = async (client, message, args) => {
         id: message.guild.id,
     }).catch(err => console.log(err));
 
-    if (usersConnected == 1 || message.member.roles.cache.has(guildSaved.modRoleId)) {
+    if (usersConnected <= 2 || message.member.roles.cache.has(guildSaved.modRoleId)) {
 
         await clear();
 
     } else {
 
-        message.channel.send(`Para limpiar la cola del servidor, ${(Math.ceil(usersConnected*0,5))-1} personas más de las ${usersConnected} conectadas deben enviar \`${client.prefix}clear\` en menos de 20 segundos.`);
+        message.channel.send(`Para limpiar la cola del servidor, ${(Math.ceil(usersConnected*0.5))-1} personas más de las ${usersConnected} conectadas deben enviar \`${client.prefix}clear\` en menos de 20 segundos.`);
 
         let filter = m => m.content.split(' ')[0] == `${client.prefix}clear` && m.author.id !== message.author.id && m.member.voice.channel && m.member.voice.channel == serverQueue.voiceChannel;
 
         message.channel.awaitMessages({
             filter,
-            max: ((Math.ceil(usersConnected*0,5))-1),
+            max: ((Math.ceil(usersConnected*0.5))-1),
             time: 20000,
             errors: ['time']
         })
         .then(async collected => {
-            if (collected.size == ((Math.ceil(usersConnected*0,5))-1)) {
+            if (collected.size == ((Math.ceil(usersConnected*0.5))-1)) {
 
                 await clear();
             }
