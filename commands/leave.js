@@ -31,5 +31,6 @@ module.exports.help = {
 module.exports.requirements = {
     userPerms: [],
     clientPerms: [],
-    modOnly: false
+    modOnly: false,
+    devOnly: false
 }

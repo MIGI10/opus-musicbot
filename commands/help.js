@@ -16,7 +16,11 @@ module.exports.run = (client, message, args) => {
         
         const commandsArray = client.commands.map(cmd => cmd.help.name)
 
-        commandsArray.splice(commandsArray.indexOf('eval'), 1)
+        for (const command of commandsArray) {
+            if (client.commands.get(command).requirements.devOnly) {
+                commandsArray.splice(commandsArray.indexOf(command), 1);
+            }
+        }
 
         const helpEmbed = new client.discordjs.MessageEmbed()
             .setTitle(`Help | Opus Music Bot`)
@@ -41,5 +45,6 @@ module.exports.help = {
 module.exports.requirements = {
     userPerms: [],
     clientPerms: [],
-    modOnly: false
+    modOnly: false,
+    devOnly: false
 }

@@ -30,6 +30,8 @@ module.exports = (client, message) => {
 
     const isMod = message.member.roles.cache.has(client.config.modRoleID);
 
+    if (cmd.requirements.devOnly && !client.config.botOwnerID.includes(message.author.id)) return
+
     if (cmd.requirements.modOnly && !isMod && !client.config.botOwnerID.includes(message.author.id))
         return message.reply('Comando solo para moderadores.')
             .then(msg => setTimeout(() => { 

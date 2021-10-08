@@ -1,7 +1,5 @@
 module.exports.run = async (client, message, args) => {
 
-    if (message.author.id !== client.config.botOwnerID) return
-
     var result = args.join(' ');
 
     try {
@@ -22,7 +20,7 @@ module.exports.run = async (client, message, args) => {
 
 module.exports.help = {
     name: "eval",
-    description: "",
+    description: "Evaluate JS code",
     usage: "",
     alias: ""
 }
@@ -31,4 +29,5 @@ module.exports.requirements = {
     userPerms: [],
     clientPerms: [],
     modOnly: false,
+    devOnly: true
 }

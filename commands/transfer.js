@@ -58,4 +58,5 @@ module.exports.requirements = {
     userPerms: [],
     clientPerms: [],
     modOnly: false,
+    devOnly: false
 }
