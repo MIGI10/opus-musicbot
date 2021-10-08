@@ -29,9 +29,16 @@ module.exports.run = async (client, message, args) => {
                         memberCount: message.guild.memberCount,
                         ownerId: message.guild.ownerId,
                         isPartnered: message.guild.partnered,
+                        isVerified: message.guild.verified,
                         joinedAt: message.guild.joinedAt,
+                        createdAt: message.guild.createdAt,
                         boostCount: message.guild.premiumSubscriptionCount,
-                        modRoleId: modRole
+                        modRoleId: modRole,
+                        description: message.guild.description,
+                        icon: message.guild.iconURL(true),
+                        banner: message.guild.bannerURL('png'),
+                        splash: message.guild.splashURL('png'),
+                        discoverySplash: message.guild.discoverySplashURL('png')
                     })
 
                     await guildDoc.save().catch(err => console.log(err));
