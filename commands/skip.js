@@ -86,9 +86,21 @@ module.exports.run = async (client, message, args) => {
             } else {
                 
                 if (serverQueue.playing) {
-                    client.queue.delete(serverQueue.textChannel.guild.id);
-                    serverQueue.textChannel.send('No hay más canciones en la cola, canal de voz abandonado')
-                    return serverQueue.connection.destroy();
+
+                    serverQueue.playing = false;
+                    serverQueue.player.stop();
+                    serverQueue.textChannel.send('No hay más canciones en la cola, reproductor detenido')
+
+                    serverQueue.inactivity = setTimeout(() => {
+
+                        if (!serverQueue.playing && !serverQueue.songs[0]) {
+
+                            client.queue.delete(serverQueue.textChannel.guild.id);
+                            serverQueue.textChannel.send('He estado inactivo durante más de un minuto, canal de voz abandonado')
+                            return serverQueue.connection.destroy();
+                        }
+
+                    }, 90 * 1000);
                 }
             }
         }
