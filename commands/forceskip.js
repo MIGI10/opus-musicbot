@@ -76,7 +76,10 @@ module.exports.run = async (client, message, args) => {
 
                         client.queue.delete(serverQueue.textChannel.guild.id);
                         serverQueue.textChannel.send('He estado inactivo durante más de un minuto, canal de voz abandonado')
-                        return serverQueue.connection.destroy();
+                        
+                        if (serverQueue.connection._state.status != 'destroyed') {
+                            serverQueue.connection.destroy();
+                        }
                     }
 
                 }, 90 * 1000);
