@@ -235,7 +235,7 @@ module.exports.run = async (client, message, args) => {
         const queueEmbed = new client.discordjs.MessageEmbed()
             .setTitle(`Cola de ${message.guild.name}`)
             .setDescription(`Loop: ${loopStatus} | Shuffle: ${shuffleStatus}`)
-            .addField('**Ahora Suena:**', `Solicitado por ${queue.songs[0].requesterUsertag}\n\`\`\`nim\n${queue.songs[0].title}\n\n${timeBar}\n\`\`\``)
+            .addField('**Ahora Suena:**', `Solicitado por ${queue.songs[0].requesterUsertag}\n\`\`\`nim\n${queue.songs[0].title.replaceAll(`\\||`, `||`)}\n\n${timeBar}\n\`\`\``)
             .setColor(65453)
             .setFooter(`Página 1 de ${totalPages}`)
 
