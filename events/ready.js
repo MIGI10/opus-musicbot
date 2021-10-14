@@ -25,7 +25,7 @@ module.exports = async (client) => {
 
         for (const guild of guilds) {
 
-            const guildInfo = await client.guilds.fetch('717406545159389226');
+            const guildInfo = await client.guilds.fetch(guild.id);
 
             guild.updateOne(
                 { $set: { 
