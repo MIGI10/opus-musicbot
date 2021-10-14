@@ -26,7 +26,8 @@ module.exports.run = async (client, message, args) => {
             playing: false,
             updating: false,
             shuffle: false,
-            loop: false
+            loop: false,
+            inactivity: null
         })
     }
 
@@ -51,6 +52,8 @@ module.exports.run = async (client, message, args) => {
                 if (!args[0]) {
                     return message.reply('¡Debes especificar una canción para iniciar el reproductor!')
                 } else {
+                    clearTimeout(serverQueue.inactivity);
+                    serverQueue.inactivity = null;
                     preQueue(args, message);
                     setTimeout(async function() {
                         await play(serverQueue.songs[0], serverQueue, false);
@@ -58,6 +61,8 @@ module.exports.run = async (client, message, args) => {
                     return
                 }
             } else {
+                    clearTimeout(serverQueue.inactivity);
+                    serverQueue.inactivity = null;
                     serverQueue.player.unpause();
                     serverQueue.songs[0].pauseTimestamps[serverQueue.songs[0].pauseTimestamps.length - 1].timeAtUnpause = Date.now();
                     serverQueue.playing = true;
@@ -452,9 +457,21 @@ module.exports.run = async (client, message, args) => {
                 } else {
         
                     if (queue.playing) {
-                        client.queue.delete(queue.textChannel.guild.id);
-                        queue.textChannel.send('No hay más canciones en la cola, canal de voz abandonado')
-                        return queue.connection.destroy();
+
+                        queue.playing = false;
+                        queue.player.stop();
+                        queue.textChannel.send('No hay más canciones en la cola, reproductor detenido')
+
+                        queue.inactivity = setTimeout(() => {
+
+                            if (!queue.playing && !queue.songs[0]) {
+
+                                client.queue.delete(queue.textChannel.guild.id);
+                                queue.textChannel.send('He estado inactivo durante más de un minuto, canal de voz abandonado')
+                                return queue.connection.destroy();
+                            }
+
+                        }, 90 * 1000);
                     }
                 }
             }

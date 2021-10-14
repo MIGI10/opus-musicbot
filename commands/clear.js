@@ -63,7 +63,18 @@ module.exports.run = async (client, message, args) => {
         serverQueue.songs = [];
         serverQueue.player.stop();
 
-        message.channel.send('Se ha limpiado la cola y se ha detenido el reproductor')
+        message.channel.send('Se ha limpiado la cola y se ha detenido el reproductor');
+
+        serverQueue.inactivity = setTimeout(() => {
+
+            if (!serverQueue.playing && !serverQueue.songs[0]) {
+
+                client.queue.delete(serverQueue.textChannel.guild.id);
+                serverQueue.textChannel.send('He estado inactivo durante 3 minutos, canal de voz abandonado')
+                return serverQueue.connection.destroy();
+            }
+
+        }, 180 * 1000);
     }
 }
 

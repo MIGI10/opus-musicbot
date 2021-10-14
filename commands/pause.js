@@ -28,7 +28,18 @@ module.exports.run = (client, message, args) => {
 
     serverQueue.songs[0].pauseTimestamps.push(pauseTimestamp);
 
-    message.channel.send(`Reproductor pausado, para reanudar \`${client.prefix}play\``)
+    message.channel.send(`Reproductor pausado, para reanudar \`${client.prefix}play\``);
+
+    serverQueue.inactivity = setTimeout(() => {
+
+        if (!serverQueue.playing) {
+            
+            client.queue.delete(serverQueue.textChannel.guild.id);
+            serverQueue.textChannel.send('He estado inactivo durante 3 minutos, canal de voz abandonado')
+            return serverQueue.connection.destroy();
+        }
+
+    }, 180 * 1000);
 }
 
 module.exports.help = {
