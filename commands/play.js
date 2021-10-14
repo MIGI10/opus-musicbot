@@ -121,6 +121,7 @@ module.exports.run = async (client, message, args) => {
 
                     let errorCode = Math.floor(Math.random()*1000);
                     const errorHeader = `--------- Internal error code: 20-${errorCode} ---------`;
+                    console.log(new Date().toLocaleString('es-ES'))
                     console.log(errorHeader);
                     console.error(error);
 
@@ -154,7 +155,7 @@ module.exports.run = async (client, message, args) => {
                         return serverQueue.connection.destroy();
                     */
 
-                    if (error.message.includes('403')) { // Temporal solution to random 403 errors from ytdl-core bug
+                    if (error.message.includes('403')) { // Temporary solution to random 403 errors from ytdl-core bug
 
                         await play(error.resource.metadata, serverQueue, true);
 
@@ -171,6 +172,7 @@ module.exports.run = async (client, message, args) => {
             client.queue.delete(message.guild.id);
             let errorCode = Math.floor(Math.random()*1000);
             const errorHeader = `--------- Internal error code: 30-${errorCode} ---------`;
+            console.log(new Date().toLocaleString('es-ES'))
             console.log(errorHeader);
             console.error(err);
 
@@ -284,9 +286,21 @@ module.exports.run = async (client, message, args) => {
         let i = 0;
         video = videoList.items[0];
 
-        while (videoList.items[i].type !== 'video' || videoList.items[i].isLive) {
+        while (!videoList.items[i] || videoList.items[i].type !== 'video' || videoList.items[i].isLive) {
             video = videoList.items[i + 1];
             i++;
+
+            if (!video) {
+                break
+            }
+        }
+
+        if (!video) {
+
+            if (!serverQueue.updating) {
+                serverQueue.textChannel.send(`No se ha encontrado ninguna canción tras buscar: **${songName}**`)
+            }
+            return
         }
 
         const length = video.length.simpleText;
@@ -370,7 +384,7 @@ module.exports.run = async (client, message, args) => {
             queue.player = player;
         }
 
-        if (!error) {
+        if (!error && song.durationSeconds < 600) { // Temporary solution to player aborted ytdl-core bug for long videos
 
             const option = {
                 filter: "audioonly",

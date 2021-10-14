@@ -42,9 +42,16 @@ const guildSchema = new db.Schema({
     memberCount: Number,
     ownerId: String,
     isPartnered: Boolean,
+    isVerified: Boolean,
     joinedAt: Date,
+    createdAt: Date,
     boostCount: Number,
-    modRoleId: String
+    modRoleId: String,
+    description: String,
+    icon: String,
+    banner: String,
+    splash: String,
+    discoverySplash: String
 });
 
 const guild = db.model("guild", guildSchema);

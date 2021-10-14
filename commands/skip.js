@@ -1,4 +1,5 @@
 const ytdl = require('ytdl-core');
+const youtubedl = require('youtube-dl-exec').raw;
 
 module.exports.run = async (client, message, args) => {
 
@@ -30,7 +31,7 @@ module.exports.run = async (client, message, args) => {
 
     } else {
 
-        message.channel.send(`Para saltar la canción actual, ${(Math.ceil(usersConnected*0.5))-1} personas más de las ${usersConnected} conectadas deben enviar \`${client.prefix}skip\` en menos de 20 segundos.`);
+        message.channel.send(`Para saltar la canción actual, **${(Math.ceil(usersConnected*0.5))-1}** persona(s) más de las ${usersConnected} conectadas deben enviar \`${client.prefix}skip\` en menos de 20 segundos.`);
 
         let filter = m => m.content.split(' ')[0] == `${client.prefix}skip` && m.author.id !== message.author.id && m.member.voice.channel && m.member.voice.channel == serverQueue.voiceChannel;
 
@@ -111,15 +112,31 @@ module.exports.run = async (client, message, args) => {
 
     async function play(song) {
 
-        const option = {
-            filter: "audioonly",
-            highWaterMark: 1 << 25,
-        };
-        const stream = await ytdl(song.url, option);
+        if (song.durationSeconds < 600) { // Temporary solution to player aborted ytdl-core bug for long videos
+            
+            const option = {
+                filter: "audioonly",
+                highWaterMark: 1 << 25,
+            };
+            const stream = await ytdl(song.url, option);
+    
+            var resource = voice.createAudioResource(stream, {
+                metadata: song
+            });
 
-        const resource = voice.createAudioResource(stream, {
-            metadata: song
-        });
+        } else {
+
+            const stream = youtubedl(song.url, {
+                o: '-',
+                q: '',
+                f: 'bestaudio[ext=webm+acodec=opus+asr=48000]/bestaudio',
+                r: '100K',
+              }, { stdio: ['ignore', 'pipe', 'ignore'] });
+        
+            var resource = voice.createAudioResource(stream.stdout, {
+                metadata: song
+            });
+        }
 
         serverQueue.player.play(resource);
 

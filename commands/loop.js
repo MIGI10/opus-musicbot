@@ -23,7 +23,7 @@ module.exports.run = (client, message, args) => {
         return message.channel.send('La reproducción en bucle ha sido desactivada')
     } else {
         serverQueue.loop = true;
-        return message.channel.send(`La reproducción en bucle ha sido activada para **${serverQueue.songs[0].title}** [${serverQueue.songs[0].duration}]`)
+        return message.channel.send(`La reproducción en bucle ha sido activada para **${serverQueue.songs[0].title}** [${serverQueue.songs[0].duration}], recuerda que el uso de \`skip\`o \`forceskip\` reproducirá la canción de nuevo, para desactivar vuelve a ejecutar el comando`)
     }
 }
 
