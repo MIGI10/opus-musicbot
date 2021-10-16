@@ -197,15 +197,18 @@ module.exports.run = async (client, message, args) => {
 
     async function preQueue(args, message) {
 
-        if (!args[0].startsWith('http:') && !args[0].startsWith('https:') && !args[0].startsWith('www.') && !args[0].startsWith('open.') && !args[0].startsWith('youtube.')) {
+        const argsJoined = args.join(' ');
 
-            await queue(args.join(' '), message.author.id, message.author.tag);
-            if (!serverQueue.songs[0]) return;
+        if (!argsJoined.includes('http:') && !argsJoined.includes('https:') && !argsJoined.includes('www.') && !argsJoined.includes('open.') && !argsJoined.includes('youtube.')) {
+
+            const queueSong = await queue(argsJoined, message.author.id, message.author.tag);
+            if (!serverQueue.songs[0] || !queueSong) return;
+
             message.channel.send(`**${serverQueue.songs[serverQueue.songs.length - 1].title}** [${serverQueue.songs[serverQueue.songs.length - 1].duration}] ha sido añadido a la cola`);
         
         } else {
             
-            if (args[0].startsWith('https://open.spotify.com/') || args[0].startsWith('http://open.spotify.com/')) {
+            if (argsJoined.includes('https://open.spotify.com/') || argsJoined.includes('http://open.spotify.com/')) {
 
                 const songs = await spotifyReq.run(client, message, args);
 
@@ -264,14 +267,17 @@ module.exports.run = async (client, message, args) => {
                 }
             }
 
-            if (args[0].startsWith('https://youtube.com') || args[0].startsWith('https://www.youtube.com')) {
+            if (argsJoined.includes('https://youtube.com') || argsJoined.includes('https://www.youtube.com')) {
 
-                const urlArray = args[0].split('/');
+                const urlArray = argsJoined.split('/');
                 const urlType = urlArray[3].split('?')[0];
 
                 if (urlType == 'watch') {
                     const videoId = urlArray[3].split('=')[1];
-                    await queue(videoId, message.author.id, message.author.tag);
+                    const queueSong = await queue(videoId, message.author.id, message.author.tag);
+
+                    if (!serverQueue.songs[0] || !queueSong) return;
+                    message.channel.send(`**${serverQueue.songs[serverQueue.songs.length - 1].title}** [${serverQueue.songs[serverQueue.songs.length - 1].duration}] ha sido añadido a la cola`);
                 } else {
                     return message.channel.send('¡Las playlists de YouTube todavía no son compatibles!')
                 }              

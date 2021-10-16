@@ -3,19 +3,15 @@ const reqAuth = require('./req-authorization');
 
 module.exports.run = async (client, message, args) => {
 
-    const urlArray = args[0].split('/');
-
-    if (args[1] || args[2]) {
-        argsGiven = true;
-    } else {
-        argsGiven = false;
-    }
-
     if (args[1] && !isNaN(args[1])) {
         var offset = parseInt(args[1]);
     } else {
         var offset = 0;
     }
+
+    args = args.join(' ');
+
+    const urlArray = args.split('/');
 
     if (urlArray[3] == 'playlist' && urlArray[4]) {
          
@@ -23,13 +19,13 @@ module.exports.run = async (client, message, args) => {
 
         let songs = []
 
-        var response = await getPlaylist(spotifyId, args);
+        var response = await getPlaylist(spotifyId);
         var query = await response.json();
     
         if (response.status == 401) {
 
             await reqAuth.run(client);
-            response = await getPlaylist(spotifyId, args);
+            response = await getPlaylist(spotifyId);
             query = await response.json();
         }
 
@@ -37,10 +33,10 @@ module.exports.run = async (client, message, args) => {
             return message.reply('¡Esa playlist no se puede cargar por ser privada!')
         }
 
-        if (argsGiven && args[1] == 'reverse' || args[2] == 'reverse') {
+        if (args.includes('reverse')) {
 
-            if (!isNaN(args[1])) {
-                message.channel.send(`Se ha solicitado que se empiece por la canción ${args[1]} y que posteriormente se añadan de forma invertida`);
+            if (offset) {
+                message.channel.send(`Se ha solicitado que se empiece por la canción ${offset} y que posteriormente se añadan de forma invertida`);
             } else {
                 message.channel.send(`Se ha solicitado que las canciones se añadan de forma invertida`)
             }
@@ -52,8 +48,8 @@ module.exports.run = async (client, message, args) => {
                 
         } else {
 
-            if (!isNaN(args[1])) {
-                message.channel.send(`Se ha solicitado que se empiece por la canción ${args[1]}`)
+            if (offset) {
+                message.channel.send(`Se ha solicitado que se empiece por la canción ${offset}`)
             }
 
             for (const item of query.items) {
@@ -98,20 +94,20 @@ module.exports.run = async (client, message, args) => {
 
         let songs = []
 
-        var response = await getAlbum(spotifyId, args);
+        var response = await getAlbum(spotifyId);
         var query = await response.json();
     
         if (response.status == 401) {
 
             await reqAuth.run(client);
-            response = await getAlbum(spotifyId, args);
+            response = await getAlbum(spotifyId);
             query = await response.json();
         }
 
-        if (argsGiven && args[1] == 'reverse' || args[2] == 'reverse') {
+        if (args.includes('reverse')) {
 
-            if (!isNaN(args[1])) {
-                message.channel.send(`Se ha solicitado que se empiece por la canción ${args[1]} y que posteriormente se añadan de forma invertida`);
+            if (offset) {
+                message.channel.send(`Se ha solicitado que se empiece por la canción ${offset} y que posteriormente se añadan de forma invertida`);
             } else {
                 message.channel.send(`Se ha solicitado que las canciones se añadan de forma invertida`)
             }
@@ -123,8 +119,8 @@ module.exports.run = async (client, message, args) => {
                 
         } else {
 
-            if (!isNaN(args[1])) {
-                message.channel.send(`Se ha solicitado que se empiece por la canción ${args[1]}`)
+            if (offset) {
+                message.channel.send(`Se ha solicitado que se empiece por la canción ${offset}`)
             }
 
             for (const item of query.items) {
@@ -140,7 +136,7 @@ module.exports.run = async (client, message, args) => {
         return songs;
     }
 
-    async function getPlaylist(spotifyId, args) {
+    async function getPlaylist(spotifyId) {
 
         if (offset) {
             parameters = `fields=total,items(track(name%2Cartists(name)))&offset=${offset}`
@@ -174,7 +170,7 @@ module.exports.run = async (client, message, args) => {
         return response;
     }
 
-    async function getAlbum(spotifyId, args) {
+    async function getAlbum(spotifyId) {
 
         if (offset) {
             parameters = `limit=50&offset=${offset}`
