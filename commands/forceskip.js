@@ -23,6 +23,14 @@ module.exports.run = async (client, message, args) => {
         return message.reply('El reproductor está detenido')
     }
 
+    if (serverQueue.updating) {
+        return message.reply('La cola está siendo actualizada, espere unos segundos a que finalice')
+            .then(msg => setTimeout(() => { 
+                msg.delete(); 
+                message.delete() 
+            }, 5000))
+    }
+
     const guildSaved = await client.db.guild.findOne({ 
         id: message.guild.id,
     }).catch(err => console.log(err));
