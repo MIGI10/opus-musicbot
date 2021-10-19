@@ -27,7 +27,8 @@ module.exports = (client, oldState, newState) => {
         if (oldState.id == client.user.id && newState.channel !== oldState.channel) {
 
             if (!newState.channel) {
-            
+                
+                clearTimeout(serverQueue.inactivity);
                 client.queue.delete(oldState.guild.id);
                 serverQueue.textChannel.send('Alguien me ha desconectado, se ha limpiado la cola');
 
