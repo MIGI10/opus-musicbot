@@ -15,6 +15,14 @@ module.exports.run = async (client, message, args) => {
         return message.reply(`Estoy actualmente en uso en <#${serverQueue.voiceChannel.id}> y <#${serverQueue.textChannel.id}>, puedes usar \`${client.prefix}transfer\` para cambiar el canal de texto de la sesión`)
     }
 
+    if (serverQueue.updating) {
+        return message.reply('La cola está siendo actualizada, espere unos segundos a que finalice')
+            .then(msg => setTimeout(() => { 
+                msg.delete(); 
+                message.delete() 
+            }, 5000))
+    }
+
     let firstPageButton = new MessageButton()
         .setCustomId('first_page')
         .setLabel('First Page')
@@ -259,13 +267,6 @@ module.exports.run = async (client, message, args) => {
     }
 
     async function lastPage(int) {
-
-        if (serverQueue.updating) {
-            int.reply('La cola está siendo actualizada, espere a que finalice para ver la última página correctamente');
-            return setTimeout(() => { 
-                int.deleteReply(); 
-            }, 5000)
-        }
 
         queueEmbed = await nowPlaying(serverQueue, message);
 

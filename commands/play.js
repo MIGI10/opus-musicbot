@@ -197,6 +197,14 @@ module.exports.run = async (client, message, args) => {
 
     async function preQueue(args, message) {
 
+        if (serverQueue.updating) {
+            return message.reply('Actualmente se está cargando una playlist o un album, espere unos segundos a que termine para añadir más canciones')
+                        .then(msg => setTimeout(() => { 
+                            msg.delete(); 
+                            message.delete() 
+                        }, 5000))
+        }
+
         const argsJoined = args.join(' ');
 
         if (!argsJoined.includes('http:') && !argsJoined.includes('https:') && !argsJoined.includes('www.') && !argsJoined.includes('open.') && !argsJoined.includes('youtube.')) {
@@ -208,7 +216,7 @@ module.exports.run = async (client, message, args) => {
         
         } else {
             
-            if (argsJoined.includes('https://open.spotify.com/') || argsJoined.includes('http://open.spotify.com/')) {
+            if (argsJoined.includes('open.spotify.com/')) {
 
                 const songs = await spotifyReq.run(client, message, args);
 
@@ -216,50 +224,68 @@ module.exports.run = async (client, message, args) => {
 
                 let i = 1;
 
-                if (songs.type == 'playlist') {
+                if (songs.type == 'playlist' || songs.type == 'album') {
 
-                    if (songs.total - songs.offset <= 100) {
-                        message.channel.send(`${songs.length} canciones han sido cargadas y se están añadiendo a la cola`);
+                    if (songs.type == 'playlist') {
+
+                        if (songs.total - songs.offset <= 100) {
+                            message.channel.send(`${songs.length} canciones han sido cargadas y se están añadiendo a la cola`);
+                        } else {
+                            message.channel.send(`Esta playlist supera el límite de canciones que se pueden añadir a la vez, solamente se han cargado 100 canciones de ${songs.total} y se están añadiendo a la cola`);  
+                        }
+
                     } else {
-                        message.channel.send(`Esta playlist supera el límite de canciones que se pueden añadir a la vez, solamente se han cargado 100 canciones de ${songs.total} y se están añadiendo a la cola`);  
+
+                        if (songs.total - songs.offset <= 50) {
+                            message.channel.send(`${songs.length} canciones han sido cargadas y se están añadiendo a la cola`);
+                        } else {
+                            message.channel.send(`Este album supera el límite de canciones que se pueden añadir a la vez, solamente se han cargado 100 canciones de ${songs.total} y se están añadiendo a la cola`);  
+                        }
                     }
 
                     serverQueue.updating = true;
     
                     for (const song of songs) {
+
                         if (typeof song === 'string') {
-    
-                            await queue(song, message.author.id, message.author.tag);
-    
-                            if (i == (songs.length)) {
-                                message.channel.send(`Se han añadido ${i} canciones a la cola con éxito`);
-                                serverQueue.updating = false;
+                            
+                            if (i == 1) {
+                                await queue(song, message.author.id, message.author.tag, i);
+                            } else {
+                                queue(song, message.author.id, message.author.tag, i);
                             }
+    
+                            if (i == songs.length) {
+
+                                setTimeout(async () => {
+
+                                    const sorted = serverQueue.songs.filter(song => song.position).sort((a, b) => {
+                                        return a.position - b.position;
+                                    })
+                                    
+                                    let firstSong = serverQueue.songs.indexOf(serverQueue.songs.find(element => element.position)) + 1;
+                                    let lastSong = serverQueue.songs.indexOf(serverQueue.songs.filter(element => element.position).pop()) + 1;
+
+                                    for await (const sortedSong of sorted) {
+                                        sortedSong.position = null;
+                                    }
+
+                                    serverQueue.songs.splice(firstSong, lastSong - firstSong);
+
+                                    for (let i = firstSong, j = 1; i < lastSong; i++, j++) {
+                                        serverQueue.songs.splice(i, 0, sorted[j]);
+                                    }
+
+                                    message.channel.send(`Se han añadido ${i - 1} canciones a la cola con éxito`);
+                                    serverQueue.updating = false;
+
+                                }, 10000);
+                            }
+
                             i++
                         }
                     }
-                } else if (songs.type == 'album') {
 
-                    if (songs.total - songs.offset <= 50) {
-                        message.channel.send(`${songs.length} canciones han sido cargadas y se están añadiendo a la cola`);
-                    } else {
-                        message.channel.send(`Esta playlist supera el límite de canciones que se pueden añadir a la vez, solamente se han cargado 100 canciones de ${songs.total} y se están añadiendo a la cola`);  
-                    }
-                    
-                    serverQueue.updating = true;
-
-                    for (const song of songs) {
-                        if (typeof song === 'string') {
-    
-                            await queue(song, message.author.id, message.author.tag);
-    
-                            if (i == (songs.length)) {
-                                message.channel.send(`Se han añadido ${i} canciones a la cola con éxito`);
-                                serverQueue.updating = false;
-                            }
-                            i++
-                        }
-                    }
                 } else if (songs.type == 'track') {
 
                     await queue(songs[0], message.author.id, message.author.tag);
@@ -267,13 +293,20 @@ module.exports.run = async (client, message, args) => {
                 }
             }
 
-            if (argsJoined.includes('https://youtube.com') || argsJoined.includes('https://www.youtube.com')) {
+            if (argsJoined.includes('youtube.com/') || argsJoined.includes('youtu.be/')) {
 
                 const urlArray = argsJoined.split('/');
-                const urlType = urlArray[3].split('?')[0];
+
+                const urlType = argsJoined.includes('youtube.com/') ?
+                    urlArray[3].split('?')[0]:
+                    'watch';
 
                 if (urlType == 'watch') {
-                    const videoId = urlArray[3].split('=')[1];
+
+                    const videoId = argsJoined.includes('youtube.com/') ?
+                        urlArray[3].split('=')[1]:
+                        urlArray[3];
+
                     const queueSong = await queue(videoId, message.author.id, message.author.tag);
 
                     if (!serverQueue.songs[0] || !queueSong) return;
@@ -285,7 +318,7 @@ module.exports.run = async (client, message, args) => {
         }
     }
 
-    async function queue(songName, requesterId, requesterUsertag) {
+    async function queue(songName, requesterId, requesterUsertag, position) {
 
         const videoList = await youtubeSearch.GetListByKeyword(songName, false);
 
@@ -365,6 +398,7 @@ module.exports.run = async (client, message, args) => {
             title: video.title.replaceAll(`||`, `\\||`),
             duration: duration,
             durationSeconds: totalDurationSeconds,
+            position: position,
             timeAtPlay: null,
             pauseTimestamps: [],
             url: 'https://www.youtube.com/watch?v=' + video.id,
