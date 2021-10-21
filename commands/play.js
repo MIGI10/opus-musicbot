@@ -22,7 +22,6 @@ module.exports.run = async (client, message, args) => {
             connection: null,
             player: null,
             songs: [],
-            volume: 5,
             playing: false,
             updating: false,
             shuffle: false,
@@ -139,27 +138,19 @@ module.exports.run = async (client, message, args) => {
                     });
 
                     writeStream.end();
-                    
-                    /*
-                    fs.appendFileSync(path.join(
-                        __dirname,
-                        "..",
-                        "logs",
-                        `${new Date().toISOString()}.log`
-                    ), JSON.stringify(errorHeader, null, 2) + "\n\n" + JSON.stringify(error, null, 2) + "\n\n" + JSON.stringify(guildInfo, null, 2) + "\n\n" + JSON.stringify(serverQueue, null, 2));
-                    */
-
-                    /*
-                        message.channel.send(`ERROR: No se ha podido reproducir la canción debido a un error interno, puedes reportar este error enviándome un mensaje privado y proporcionando el siguiente código de error: \`20-${errorCode}\``);
-                        client.queue.delete(serverQueue.textChannel.guild.id);
-                        return serverQueue.connection.destroy();
-                    */
 
                     if (error.message.includes('403')) { // Temporary solution to random 403 errors from ytdl-core bug
 
                         await play(error.resource.metadata, serverQueue, true);
-
-                    } else {
+                    } 
+                    
+                    if (error.message.includes('410')) { // Temporary inform message about restricted or sensitive videos
+ 
+                        message.channel.send(`No se ha podido reproducir la canción debido a que esta tiene restricción de edad o está marcada como contenido sensible, esta limitación será retirada en la próxima actualización. Código de error: \`20-${errorCode}\``);
+                        return idleFunction();
+                    }
+                    
+                    if (!error.message.includes('403') && !error.message.includes('410')) {
 
                         message.channel.send(`ERROR: No se ha podido reproducir la canción debido a un error, puedes reportar este error enviándome un mensaje privado y proporcionando el siguiente código de error: \`20-${errorCode}\``);
                         return idleFunction();
