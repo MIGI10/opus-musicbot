@@ -41,17 +41,14 @@ const guildSchema = new db.Schema({
     name: String,
     memberCount: Number,
     ownerId: String,
-    isPartnered: Boolean,
-    isVerified: Boolean,
+    ownerTag: String,
+    modRoleId: String,
     joinedAt: Date,
     createdAt: Date,
+    isPartnered: Boolean,
+    isVerified: Boolean,
     boostCount: Number,
-    modRoleId: String,
-    description: String,
-    icon: String,
-    banner: String,
-    splash: String,
-    discoverySplash: String
+    description: String
 });
 
 const guild = db.model("guild", guildSchema);
