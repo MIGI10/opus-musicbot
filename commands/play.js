@@ -26,7 +26,8 @@ module.exports.run = async (client, message, args) => {
             updating: false,
             shuffle: false,
             loop: false,
-            inactivity: null
+            inactivity: null,
+            playingEmbed: null
         })
     }
 
@@ -203,7 +204,13 @@ module.exports.run = async (client, message, args) => {
             const queueSong = await queue(argsJoined, message.author.id, message.author.tag);
             if (!serverQueue.songs[0] || !queueSong) return;
 
-            message.channel.send(`**${serverQueue.songs[serverQueue.songs.length - 1].title}** [${serverQueue.songs[serverQueue.songs.length - 1].duration}] ha sido añadido a la cola`);
+            const newSong = serverQueue.songs[serverQueue.songs.length - 1];
+
+            const queuedEmbed = new client.discordjs.MessageEmbed()
+            .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) añadido a la cola`)
+            .setColor(65453)
+
+            message.channel.send({ embeds: [queuedEmbed]});
         
         } else {
             
@@ -219,20 +226,23 @@ module.exports.run = async (client, message, args) => {
 
                     if (songs.type == 'playlist') {
 
-                        if (songs.total - songs.offset <= 100) {
-                            message.channel.send(`${songs.length} canciones han sido cargadas y se están añadiendo a la cola`);
-                        } else {
-                            message.channel.send(`Esta playlist supera el límite de canciones que se pueden añadir a la vez, solamente se han cargado 100 canciones de ${songs.total} y se están añadiendo a la cola`);  
-                        }
+                        embedDesc = songs.total - songs.offset <= 100 ?
+                            `Cargando **${songs.length}** canciones`:
+                            `Cargando **100** canciones de ${songs.total}\n(Límite temporal de 100 canciones)`;
 
                     } else {
 
-                        if (songs.total - songs.offset <= 50) {
-                            message.channel.send(`${songs.length} canciones han sido cargadas y se están añadiendo a la cola`);
-                        } else {
-                            message.channel.send(`Este album supera el límite de canciones que se pueden añadir a la vez, solamente se han cargado 100 canciones de ${songs.total} y se están añadiendo a la cola`);  
-                        }
+                        embedDesc = songs.total - songs.offset <= 50 ?
+                            `Cargando **${songs.length}** canciones`:
+                            `Cargando **50** canciones de ${songs.total}\n(Límite temporal de 100 canciones, 50 para álbumes)`;
                     }
+
+                    let queuedEmbed = new client.discordjs.MessageEmbed()
+                        .setAuthor(`Añadiendo canciones a la cola...`, 'https://i.gifer.com/origin/6a/6af36f7b9c1ac8a7e9d7dbcaa479b616.gif')
+                        .setDescription(embedDesc)
+                        .setColor(65453)
+        
+                    const queuedMsg = await message.channel.send({ embeds: [queuedEmbed]});
 
                     serverQueue.updating = true;
     
@@ -267,8 +277,13 @@ module.exports.run = async (client, message, args) => {
                                         serverQueue.songs.splice(i, 0, sorted[j]);
                                     }
 
-                                    message.channel.send(`Se han añadido ${i - 1} canciones a la cola con éxito`);
                                     serverQueue.updating = false;
+
+                                    queuedEmbed = new client.discordjs.MessageEmbed()
+                                    .setDescription(`**${i - 1}** canciones han sido añadidas`)
+                                    .setColor(65453)
+                        
+                                    queuedMsg.edit({ embeds: [queuedEmbed]});
 
                                 }, 10000);
                             }
@@ -280,7 +295,14 @@ module.exports.run = async (client, message, args) => {
                 } else if (songs.type == 'track') {
 
                     await queue(songs[0], message.author.id, message.author.tag);
-                    message.channel.send(`**${serverQueue.songs[serverQueue.songs.length - 1].title}** [${serverQueue.songs[serverQueue.songs.length - 1].duration}] ha sido añadido a la cola`);
+
+                    const newSong = serverQueue.songs[serverQueue.songs.length - 1];
+
+                    const queuedEmbed = new client.discordjs.MessageEmbed()
+                    .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) añadido a la cola`)
+                    .setColor(65453)
+        
+                    message.channel.send({ embeds: [queuedEmbed]});
                 }
             }
 
@@ -294,14 +316,24 @@ module.exports.run = async (client, message, args) => {
 
                 if (urlType == 'watch') {
 
-                    const videoId = argsJoined.includes('youtube.com/') ?
+                    let videoId = argsJoined.includes('youtube.com/') ?
                         urlArray[3].split('=')[1]:
                         urlArray[3];
+                    
+                    videoId = videoId.split('&')[0];
 
                     const queueSong = await queue(videoId, message.author.id, message.author.tag);
 
                     if (!serverQueue.songs[0] || !queueSong) return;
-                    message.channel.send(`**${serverQueue.songs[serverQueue.songs.length - 1].title}** [${serverQueue.songs[serverQueue.songs.length - 1].duration}] ha sido añadido a la cola`);
+                    
+                    const newSong = serverQueue.songs[serverQueue.songs.length - 1];
+
+                    const queuedEmbed = new client.discordjs.MessageEmbed()
+                    .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) añadido a la cola`)
+                    .setColor(65453)
+        
+                    message.channel.send({ embeds: [queuedEmbed]});
+
                 } else {
                     return message.channel.send('¡Las playlists de YouTube todavía no son compatibles!')
                 }              
@@ -312,6 +344,23 @@ module.exports.run = async (client, message, args) => {
     async function queue(songName, requesterId, requesterUsertag, position) {
 
         const videoList = await youtubeSearch.GetListByKeyword(songName, false);
+
+        const writeStream = fs.createWriteStream(path.join(
+            __dirname,
+            "..",
+            "searches",
+            `${new Date().toISOString()}.log`
+        ));
+
+        for (const vid of videoList.items) {
+            writeStream.write(`${JSON.stringify(vid, null, 4)}\n`)
+        }
+
+        writeStream.on('error', (err) => {
+            console.error(err)
+        });
+
+        writeStream.end();
 
         let i = 0;
         video = videoList.items[0];
@@ -450,10 +499,22 @@ module.exports.run = async (client, message, args) => {
         song.pauseTimestamps = [];
 
         if (!error) {
-            queue.textChannel.send(`Reproduciendo **${song.title}** [${song.duration}] || Solicitado por \`${song.requesterUsertag}\``);
+
+            const nowPlayingEmbed = new client.discordjs.MessageEmbed()
+            .setAuthor(`Ahora Suena`, client.user.displayAvatarURL({dynamic: true, size: 1024}))
+            .setTitle(`${song.title} [${song.duration}]`)
+            .setFooter(`Solicitado por ${song.requesterUsertag}`)
+            .setURL(song.url)
+            .setColor(65453)
+
+            const nowPlayingMsg = await queue.textChannel.send({ embeds: [nowPlayingEmbed]});
+
+            queue.playingEmbed = nowPlayingMsg;
         }
     
         queue.player.once(voice.AudioPlayerStatus.Idle, () => {
+
+            queue.playingEmbed.delete();
 
             if (queue.loop) {
 
@@ -516,7 +577,7 @@ module.exports.run = async (client, message, args) => {
 module.exports.help = {
     name: "play",
     description: "Conectar a un canal de voz y reproducir la canción solicitada, añadir una canción a la cola y para reanudar tras usar el comando de pausa",
-    usage: "Para conectar y reproducir o añadir una canción a la cola, escribe el nombre o link de YouTube/Spotify de una canción. Para cargar una playlist o album de Spotify pega el link del mismo. Para reanudar tras pausa, escribe solo el comando.\n\nHay disponibles dos argumentos opcionales al cargar una playlist o un album de Spotify, el primero es el número de la canción que desea que sea la primera mientras que el segundo invierte el orden de la playlist al escribir `reverse`:\n\nplay [url] <número primera canción> <reverse>",
+    usage: "Para conectar y reproducir o añadir una canción a la cola, escribe el nombre o link de YouTube/Spotify de una canción. Para cargar una playlist o album de Spotify pega el link del mismo (hay un límite temporal de 100 canciones simultáneas, 50 para álbumes). Para reanudar tras pausa, escribe solo el comando.\n\nHay disponibles dos argumentos opcionales al cargar una playlist o un album de Spotify, el primero es el número de la canción que desea que sea la primera mientras que el segundo invierte el orden de la playlist al escribir `reverse`:\n\nplay [url] <número primera canción> <reverse>",
     alias: "p"
 }
 

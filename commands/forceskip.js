@@ -41,6 +41,8 @@ module.exports.run = async (client, message, args) => {
         return message.reply(`Solo puede usar \`${client.prefix}forceskip\` la persona que ha solicitado la canción que suena actualmente (${nowPlaying.requesterUsertag}) o un moderador.`);
     }
 
+    serverQueue.playingEmbed.delete();
+
     if (serverQueue.loop) {
 
         return play(serverQueue.songs[0]);
@@ -129,7 +131,16 @@ module.exports.run = async (client, message, args) => {
         song.timeAtPlay = Date.now();
         song.pauseTimestamps = [];
 
-        serverQueue.textChannel.send(`Reproduciendo **${song.title}** [${song.duration}] || Solicitado por \`${song.requesterUsertag}\``);
+        const nowPlayingEmbed = new client.discordjs.MessageEmbed()
+        .setAuthor(`Ahora Suena`, client.user.displayAvatarURL({dynamic: true, size: 1024}))
+        .setTitle(`${song.title} [${song.duration}]`)
+        .setFooter(`Solicitado por ${song.requesterUsertag}`)
+        .setURL(song.url)
+        .setColor(65453)
+
+        const nowPlayingMsg = await serverQueue.textChannel.send({ embeds: [nowPlayingEmbed]});
+
+        serverQueue.playingEmbed = nowPlayingMsg;
     }
 }
 

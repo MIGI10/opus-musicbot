@@ -16,6 +16,12 @@ module.exports.run = (client, message, args) => {
 
     serverQueue.textChannel.send(`Reproductor detenido, abandonando **<#${serverQueue.voiceChannel.id}>**`);
 
+    if (serverQueue.playingEmbed) {
+        serverQueue.playingEmbed.delete();
+    }
+
+    clearTimeout(serverQueue.inactivity);
+
     serverQueue.connection.destroy();
 
     client.queue.delete(message.guild.id);
