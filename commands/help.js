@@ -14,7 +14,7 @@ module.exports.run = (client, message, args) => {
     
     } else {
         
-        const commandsArray = client.commands.map(cmd => cmd.help.name)
+        let commandsArray = client.commands.map(cmd => cmd.help.name)
 
         for (const command of commandsArray) {
             if (client.commands.get(command).requirements.devOnly) {
@@ -22,12 +22,14 @@ module.exports.run = (client, message, args) => {
             }
         }
 
+        commandsArray = commandsArray.map(cmd => `\`${cmd}\``);
+
         const helpEmbed = new client.discordjs.MessageEmbed()
             .setTitle(`Help | Opus Music Bot`)
             .setColor(65453)
             .addField('Commands', commandsArray.join(', '))
             .addField('Command Help', `Para ver más información de un comando: \`${client.prefix}help <comando>\``)
-            .addField('Invite Link', 'Para invitarme a un servidor: https://bit.ly/opusmusicbot')
+            .addField('Invite Link', 'Puedes invitarme a un servidor tuyo [con este enlace](https://bit.ly/opusmusicbot)')
             .addField('Support', `Para soporte envíame un mensaje privado [<@${client.user.id}>] detallando tu problema`)
             .setFooter(`Opus Music Bot v${client.config.version} · Desarrollado por migi28#7731`, client.user.displayAvatarURL({dynamic: true, size: 1024}))
         
