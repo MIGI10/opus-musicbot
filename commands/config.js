@@ -23,22 +23,21 @@ module.exports.run = async (client, message, args) => {
 
                 if (guildRoles.has(modRole)) {
 
+                    const owner = await message.guild.fetchOwner();
+
                     const guildDoc = new client.db.guild({
                         id: message.guild.id,
                         name: message.guild.name,
                         memberCount: message.guild.memberCount,
                         ownerId: message.guild.ownerId,
-                        isPartnered: message.guild.partnered,
-                        isVerified: message.guild.verified,
+                        ownerTag: owner.user.tag, //
+                        modRoleId: modRole,
                         joinedAt: message.guild.joinedAt,
                         createdAt: message.guild.createdAt,
+                        isPartnered: message.guild.partnered,
+                        isVerified: message.guild.verified,
                         boostCount: message.guild.premiumSubscriptionCount,
-                        modRoleId: modRole,
-                        description: message.guild.description,
-                        icon: message.guild.iconURL(true),
-                        banner: message.guild.bannerURL('png'),
-                        splash: message.guild.splashURL('png'),
-                        discoverySplash: message.guild.discoverySplashURL('png')
+                        description: message.guild.description
                     })
 
                     await guildDoc.save().catch(err => console.log(err));

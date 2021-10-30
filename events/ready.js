@@ -27,20 +27,18 @@ module.exports = async (client) => {
 
             const guildInfo = await client.guilds.fetch(guild.id);
 
+            const owner = await guildInfo.fetchOwner();
+
             guild.updateOne(
                 { $set: { 
                     name: guildInfo.name,
                     memberCount: guildInfo.memberCount,
                     ownerId: guildInfo.ownerId,
+                    ownerTag: owner.user.tag,
                     isPartnered: guildInfo.partnered,
                     isVerified: guildInfo.verified,
-                    createdAt: guildInfo.createdAt,
                     boostCount: guildInfo.premiumSubscriptionCount,
                     description: guildInfo.description,
-                    icon: guildInfo.iconURL(true),
-                    banner: guildInfo.bannerURL('png'),
-                    splash: guildInfo.splashURL('png'),
-                    discoverySplash: guildInfo.discoverySplashURL('png')
                 }}, (error) => {
                 if (error) console.log(error);
             });

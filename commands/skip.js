@@ -5,6 +5,10 @@ module.exports.run = async (client, message, args) => {
 
     voice = client.discordjsvoice
 
+    const guildSaved = await client.db.guild.findOne({ 
+        id: message.guild.id,
+    }).catch(err => console.log(err));
+
     if (!client.queue.get(message.guild.id) || !client.queue.get(message.guild.id).connection) {
         return message.reply('¡El bot no está actualmente en uso!');
     }
@@ -31,6 +35,12 @@ module.exports.run = async (client, message, args) => {
             }, 5000))
     }
 
+    const nowPlaying = serverQueue.songs[0];
+
+    if (message.member.roles.cache.has(guildSaved.modRoleId) || message.author.id == nowPlaying.requesterId) {
+        return skip();
+    }
+
     const usersConnected = serverQueue.voiceChannel.members.size - 1;
 
     if (usersConnected <= 2) {
@@ -39,7 +49,7 @@ module.exports.run = async (client, message, args) => {
 
     } else {
 
-        message.channel.send(`Para saltar la canción actual, **${(Math.ceil(usersConnected*0.5))-1}** persona(s) más de las ${usersConnected} conectadas deben enviar \`${client.prefix}skip\` en menos de 20 segundos.`);
+        const msg = await message.channel.send(`Para saltar la canción actual, **${(Math.ceil(usersConnected*0.5))-1}** persona(s) más de las ${usersConnected} conectadas deben enviar \`${client.prefix}skip\` en menos de 20 segundos.`);
 
         let filter = m => m.content.split(' ')[0] == `${client.prefix}skip` && m.author.id !== message.author.id && m.member.voice.channel && m.member.voice.channel == serverQueue.voiceChannel;
 
@@ -50,17 +60,19 @@ module.exports.run = async (client, message, args) => {
             errors: ['time']
         })
         .then(async collected => {
-            if (collected.size == ((Math.ceil(usersConnected*0,5))-1)) {
+            if (collected.size == ((Math.ceil(usersConnected*0.5))-1)) {
 
                 await skip();   
             }
         })
         .catch(collected => {
-            return message.channel.send(`Skip cancelado.`);
+            return msg.edit(`Skip cancelado.`);
         });
     }
 
     async function skip() {
+
+        serverQueue.playingEmbed.delete();
 
         if (serverQueue.loop) {
 
@@ -151,13 +163,22 @@ module.exports.run = async (client, message, args) => {
         song.timeAtPlay = Date.now();
         song.pauseTimestamps = [];
 
-        serverQueue.textChannel.send(`Reproduciendo **${song.title}** [${song.duration}] || Solicitado por \`${song.requesterUsertag}\``);
+        const nowPlayingEmbed = new client.discordjs.MessageEmbed()
+        .setAuthor(`Ahora Suena`, client.user.displayAvatarURL({dynamic: true, size: 1024}))
+        .setTitle(`${song.title} [${song.duration}]`)
+        .setFooter(`Solicitado por ${song.requesterUsertag}`)
+        .setURL(song.url)
+        .setColor(65453)
+
+        const nowPlayingMsg = await serverQueue.textChannel.send({ embeds: [nowPlayingEmbed]});
+
+        serverQueue.playingEmbed = nowPlayingMsg;
     }
 }
 
 module.exports.help = {
     name: "skip",
-    description: "Saltar la canción que suena, al menos la mitad de los usuarios conectados deben estar de acuerdo",
+    description: "Saltar la canción que suena, al menos la mitad de los usuarios conectados deben estar de acuerdo, si el usuario que solicita el skip es moderador o es el que ha solicitado la canción, no hace falta el acuerdo de los otros usuarios",
     usage: "La mitad de las personas conectadas al canal de voz deben utilizar el comando en menos de 20 segundos a partir del primer `skip`",
     alias: "s"
 }

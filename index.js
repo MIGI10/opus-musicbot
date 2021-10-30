@@ -1,5 +1,10 @@
 const Discord = require('discord.js');
 const voice = require('@discordjs/voice');
+const db = require("mongoose");
+const Genius = require("genius-lyrics");
+
+const config = require('./config.json');
+
 const client = new Discord.Client({ intents: [
     Discord.Intents.FLAGS.GUILDS,
     Discord.Intents.FLAGS.GUILD_MEMBERS,
@@ -10,8 +15,8 @@ const client = new Discord.Client({ intents: [
     Discord.Intents.FLAGS.GUILD_VOICE_STATES
 ], partials: ["CHANNEL"]
 });
-const db = require("mongoose");
-const config = require('./config.json');
+
+const geniusClient = new Genius.Client(config.geniusToken);
 
 const engStrings = require('./lang/eng.json');
 const spaStrings = require('./lang/spa.json');
@@ -30,6 +35,7 @@ client.commands = new Discord.Collection();
 client.cmdaliases = new Discord.Collection();
 client.discordjs = Discord;
 client.discordjsvoice = voice;
+client.geniusapi = geniusClient;
 
 const queue = new Map();
 client.queue = queue;
@@ -51,17 +57,14 @@ const guildSchema = new db.Schema({
     name: String,
     memberCount: Number,
     ownerId: String,
-    isPartnered: Boolean,
-    isVerified: Boolean,
+    ownerTag: String,
+    modRoleId: String,
     joinedAt: Date,
     createdAt: Date,
+    isPartnered: Boolean,
+    isVerified: Boolean,
     boostCount: Number,
-    modRoleId: String,
-    description: String,
-    icon: String,
-    banner: String,
-    splash: String,
-    discoverySplash: String
+    description: String
 });
 
 const guild = db.model("guild", guildSchema);

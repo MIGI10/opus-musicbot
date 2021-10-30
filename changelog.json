@@ -7,6 +7,7 @@
             "Los links acortados de YouTube (youtu.be) ya son compatibles",
             "Las playlists de Spotify cargan mucho más rápido ahora",
             "Nuevo comando `search` para poder hacer búsquedas de canciones y poder elegir la deseada",
+            "Nuevo comando `lyrics` para mostrar el lyrics de la canción que suena o de una canción proporcionada",
             "Cuando no hay más canciones en la cola, ahora espera 90 segundos antes de abandonar el canal de voz",
             "Al quedarse solo en un canal de voz, el bot esperará 10 segundos antes de abandonar el mismo",
             "Cuando se quede inactivo (al estar pausado o tras usar `clear`), el bot esperará 3 minutos antes de desconectarse",
