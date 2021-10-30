@@ -13,6 +13,16 @@ const client = new Discord.Client({ intents: [
 const db = require("mongoose");
 const config = require('./config.json');
 
+const engStrings = require('./lang/eng.json');
+const spaStrings = require('./lang/spa.json');
+
+strings = {};
+
+strings['eng'] = engStrings;
+strings['spa'] = spaStrings;
+
+global.strings = strings;
+
 client.prefix = config.prefix;
 client.config = config;
 client.db = db;
