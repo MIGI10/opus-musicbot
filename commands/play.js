@@ -11,12 +11,13 @@ module.exports.run = async (client, message, args) => {
         id: message.guild.id,
     }).catch(err => console.log(err));
 
-    if (!guildInfo) return message.channel.send(`No he sido configurado todavía, un usuario con permisos debe ejecutar \`${client.prefix}config\``)
+    if (!guildInfo) return message.channel.send(strings[serverQueue.lang].guildNotConfigured.replace('%PREFIX%', client.prefix));
 
     voice = client.discordjsvoice
 
     if (!client.queue.get(message.guild.id)) { 
         client.queue.set(message.guild.id, {
+            lang: guildInfo.language,
             textChannel: null,
             voiceChannel: null,
             connection: null,
@@ -34,23 +35,23 @@ module.exports.run = async (client, message, args) => {
     const serverQueue = client.queue.get(message.guild.id);
 
     if (!message.member.voice.channel && !serverQueue.voiceChannel) {
-        return message.reply('¡Tienes que estar conectado a un canal de voz!')
+        return message.reply(strings[serverQueue.lang].userNotConnectedToVoice)
     }
 
     if (serverQueue.voiceChannel) {
 
         if (!message.member.voice.channel || message.member.voice.channel !== serverQueue.voiceChannel) {
-            return message.reply('¡No estás conectado al mismo canal de voz que yo!')
+            return message.reply(strings[serverQueue.lang].userNotConnectedToSameVoice)
         }
 
         if (message.channel !== serverQueue.textChannel) {
-            return message.reply(`Estoy actualmente en uso en <#${serverQueue.voiceChannel.id}> y <#${serverQueue.textChannel.id}>, puedes usar \`${client.prefix}transfer\` para cambiar el canal de texto de la sesión`)
+            return message.reply(strings[serverQueue.lang].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id).replace('%PREFIX', client.prefix));
         }
 
         if (!serverQueue.playing) {
             if (!serverQueue.songs[0]) {
                 if (!args[0]) {
-                    return message.reply('¡Debes especificar una canción para iniciar el reproductor!')
+                    return message.reply(strings[serverQueue.lang].userMustSpecifySongToStartPlayer)
                 } else {
                     clearTimeout(serverQueue.inactivity);
                     serverQueue.inactivity = null;
@@ -67,12 +68,12 @@ module.exports.run = async (client, message, args) => {
                     serverQueue.songs[0].pauseTimestamps[serverQueue.songs[0].pauseTimestamps.length - 1].timeAtUnpause = Date.now();
                     serverQueue.playing = true;
 
-                    message.channel.send('Reproductor reanudado')
+                    message.channel.send(strings[serverQueue.lang].botPlayerResumed)
             }
         } else {
 
             if (!args[0]) {
-                return message.reply('¡Debes especificar una canción para añadirla a la cola!');
+                return message.reply(strings[serverQueue.lang].userMustSpecifySongToQueue);
             } else {
                 return preQueue(args, message);
             }
@@ -80,7 +81,7 @@ module.exports.run = async (client, message, args) => {
     } else {
 
         if (!args[0]) {
-            return message.reply('¡Debes especificar una canción para iniciar el reproductor!')
+            return message.reply(strings[serverQueue.lang].userMustSpecifySongToStartPlayer)
         }
 
         const voiceChannel = message.member.voice.channel;
@@ -89,12 +90,12 @@ module.exports.run = async (client, message, args) => {
         const textChannel = message.channel;
         serverQueue.textChannel = textChannel;
 
-        message.channel.send(`Conectando a <#${voiceChannel.id}>, ahora solo responderé comandos ejecutados aquí`);
+        message.channel.send(strings[serverQueue.lang].botConnectingToVoice.replace('%VOICECHANNELID%', voiceChannel.id));
 
         const permissions = voiceChannel.permissionsFor(message.guild.me);
         if (!permissions.has("VIEW_CHANNEL") || !permissions.has("CONNECT") || !permissions.has("SPEAK")) {
             client.queue.delete(message.guild.id);
-            return message.channel.send('ERROR: Necesito el permiso de `VER CANAL`, `CONECTAR` y `HABLAR` para funcionar correctamente!');
+            return message.channel.send(strings[serverQueue.lang].botNeedsPermsToConnect);
         }
 
         preQueue(args, message);
@@ -153,7 +154,7 @@ module.exports.run = async (client, message, args) => {
                     
                     if (!error.message.includes('403') && !error.message.includes('410')) {
 
-                        message.channel.send(`ERROR: No se ha podido reproducir la canción debido a un error, puedes reportar este error enviándome un mensaje privado y proporcionando el siguiente código de error: \`20-${errorCode}\``);
+                        message.channel.send(strings[serverQueue.lang].botCouldNotPlaySong.replace('%ERRORCODE%', errorCode));
                         return idleFunction();
                     }
                 });
@@ -183,14 +184,14 @@ module.exports.run = async (client, message, args) => {
 
             writeStream.end();
 
-            return message.channel.send(`ERROR: Ha ocurrido un error interno, puedes reportar este error enviándome un mensaje privado y proporcionando el siguiente código de error: \`30-${errorCode}\``);
+            return message.channel.send(strings[serverQueue.lang].botCouldNotConnect);
         }
     }
 
     async function preQueue(args, message) {
 
         if (serverQueue.updating) {
-            return message.reply('Actualmente se está cargando una playlist o un album, espere unos segundos a que termine para añadir más canciones')
+            return message.reply(strings[serverQueue.lang].botIsUpdating)
                         .then(msg => setTimeout(() => { 
                             msg.delete(); 
                             message.delete() 
@@ -207,7 +208,7 @@ module.exports.run = async (client, message, args) => {
             const newSong = serverQueue.songs[serverQueue.songs.length - 1];
 
             const queuedEmbed = new client.discordjs.MessageEmbed()
-            .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) añadido a la cola`)
+            .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) ${strings[serverQueue.lang].songQueued}`)
             .setColor(65453)
 
             message.channel.send({ embeds: [queuedEmbed]});
@@ -227,14 +228,14 @@ module.exports.run = async (client, message, args) => {
                     if (songs.type == 'playlist') {
 
                         embedDesc = songs.total - songs.offset <= 100 ?
-                            `Cargando **${songs.length}** canciones`:
-                            `Cargando **100** canciones de ${songs.total}\n(Límite temporal de 100 canciones)`;
+                            strings[serverQueue.lang].songsLoading.replace('%SONGCOUNT%', songs.length):
+                            strings[serverQueue.lang].playlistMaxesLimit.replace('%TOTALSONGCOUNT%', songs.total);
 
                     } else {
 
                         embedDesc = songs.total - songs.offset <= 50 ?
-                            `Cargando **${songs.length}** canciones`:
-                            `Cargando **50** canciones de ${songs.total}\n(Límite temporal de 100 canciones, 50 para álbumes)`;
+                            strings[serverQueue.lang].songsLoading.replace('%SONGCOUNT%', songs.length):
+                            strings[serverQueue.lang].albumMaxesLimit.replace('%TOTALSONGCOUNT%', songs.total);
                     }
 
                     let queuedEmbed = new client.discordjs.MessageEmbed()
@@ -280,7 +281,7 @@ module.exports.run = async (client, message, args) => {
                                     serverQueue.updating = false;
 
                                     queuedEmbed = new client.discordjs.MessageEmbed()
-                                    .setDescription(`**${i - 1}** canciones han sido añadidas`)
+                                    .setDescription(strings[serverQueue.lang].songsQueued.replace('%SONGCOUNT%', i - 1))
                                     .setColor(65453)
                         
                                     queuedMsg.edit({ embeds: [queuedEmbed]});
@@ -299,7 +300,7 @@ module.exports.run = async (client, message, args) => {
                     const newSong = serverQueue.songs[serverQueue.songs.length - 1];
 
                     const queuedEmbed = new client.discordjs.MessageEmbed()
-                    .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) añadido a la cola`)
+                    .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) ${strings[serverQueue.lang].songQueued}`)
                     .setColor(65453)
         
                     message.channel.send({ embeds: [queuedEmbed]});
@@ -329,13 +330,13 @@ module.exports.run = async (client, message, args) => {
                     const newSong = serverQueue.songs[serverQueue.songs.length - 1];
 
                     const queuedEmbed = new client.discordjs.MessageEmbed()
-                    .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) añadido a la cola`)
+                    .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) ${strings[serverQueue.lang].songQueued}`)
                     .setColor(65453)
         
                     message.channel.send({ embeds: [queuedEmbed]});
 
                 } else {
-                    return message.channel.send('¡Las playlists de YouTube todavía no son compatibles!')
+                    return message.channel.send(strings[serverQueue.lang].botNotCompatibleWithYoutubePlaylists)
                 }              
             }
         }
@@ -377,7 +378,7 @@ module.exports.run = async (client, message, args) => {
         if (!video) {
 
             if (!serverQueue.updating) {
-                serverQueue.textChannel.send(`No se ha encontrado ninguna canción tras buscar: **${songName}**`)
+                serverQueue.textChannel.send(strings[serverQueue.lang].songNotFound.replace('%SONGNAME%', songName))
             }
             return
         }
@@ -552,14 +553,14 @@ module.exports.run = async (client, message, args) => {
 
                         queue.playing = false;
                         queue.player.stop();
-                        queue.textChannel.send('No hay más canciones en la cola, reproductor detenido')
+                        queue.textChannel.send(strings[serverQueue.lang].botPlayerStoppedNoSongs)
 
                         queue.inactivity = setTimeout(() => {
 
                             if (!queue.playing && !queue.songs[0]) {
 
                                 client.queue.delete(queue.textChannel.guild.id);
-                                queue.textChannel.send('He estado inactivo durante más de un minuto, canal de voz abandonado')
+                                queue.textChannel.send(strings[serverQueue.lang].botInactiveForAMinute)
                                 
                                 if (serverQueue.connection._state.status != 'destroyed') {
                                     serverQueue.connection.destroy();
