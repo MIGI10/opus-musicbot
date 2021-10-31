@@ -1,6 +1,10 @@
-module.exports = (client, oldState, newState) => {
+module.exports = async (client, oldState, newState) => {
     
     if (!client.queue.get(oldState.guild.id) || !client.queue.get(oldState.guild.id).connection) return;
+
+    const guild = await client.db.guild.findOne({ 
+        id: oldState.guild.id,
+    }).catch(err => console.log(err));
 
     const serverQueue = client.queue.get(oldState.guild.id);
 
@@ -12,7 +16,7 @@ module.exports = (client, oldState, newState) => {
 
                 serverQueue.inactivity = setTimeout(() => {
 
-                    serverQueue.textChannel.send('Me he quedado solo :(, canal de voz abandonado');
+                    serverQueue.textChannel.send(strings[guild.language].botLeftAlone);
 
                     if (serverQueue.connection._state.status != 'destroyed') {
                         serverQueue.connection.destroy();
@@ -30,19 +34,19 @@ module.exports = (client, oldState, newState) => {
                 
                 clearTimeout(serverQueue.inactivity);
                 client.queue.delete(oldState.guild.id);
-                serverQueue.textChannel.send('Alguien me ha desconectado, se ha limpiado la cola');
+                serverQueue.textChannel.send(strings[guild.language].botHasBeenDisconnected);
 
             } else {
 
                 serverQueue.connection = client.discordjsvoice.getVoiceConnection(newState.guild.id);
                 serverQueue.voiceChannel = newState.channel;
-                serverQueue.textChannel.send(`Alguien me ha movido a <#${serverQueue.voiceChannel.id}> pero seguiré respondiendo únicamente comandos ejecutados aquí, en <#${serverQueue.textChannel.id}>. Para cambiar de canal de texto, utiliza \`${client.prefix}transfer\``);
+                serverQueue.textChannel.send(strings[guild.language].botHasBeenMoved.replace('%VOICECHANNEL%', serverQueue.voiceChannel.id).replace('%TEXTCHANNEL%', serverQueue.textChannel.id).replace('%PREFIX%', client.prefix));
                 
                 if (newState.channel.members.size == 1) {
 
                     serverQueue.inactivity = setTimeout(() => {
 
-                        serverQueue.textChannel.send('Me he quedado solo :(, canal de voz abandonado');
+                        serverQueue.textChannel.send(strings[guild.language].botLeftAlone);
 
                         if (serverQueue.connection._state.status != 'destroyed') {
                             serverQueue.connection.destroy();

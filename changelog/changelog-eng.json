@@ -1,0 +1,21 @@
+{
+    "versions": {
+        "2.0 - 29/10/21": [
+            "Embeds have been added to *now playing x* and *x added to queue*",
+            "Multiple messages sent when loading a playlist have been replaced with an embed",
+            "*Now playing x* message is automatically deleted when song ends, skipped or when player is stopped",
+            "YouTube shortened links are now compatible (youtu.be)",
+            "Spotify playlists/albums now load much faster",
+            "New command `search` allows retrieving YouTube search results for a specified song",
+            "When there are no more queued songs, bot will wait 90 seconds before leaving",
+            "When left alone, bot will wait 10 seconds before leaving",
+            "When inactive (after pausing or `clear` use), bot will wait 3 minutes before leaving",
+            "New commands `changelog`, `invite`",
+            "Performance improvements"
+        ],
+        "2.1 - 31/10/21": [
+            "New command `lyrics`, shows lyrics of currently playing or specified song",
+            "Language can be changed now with `config`, available languages: Spanish and English"
+        ]
+    }
+}

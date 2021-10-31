@@ -1,20 +1,20 @@
-module.exports.run = (client, message, args) => {
+module.exports.run = (client, message, args, guild) => {
     
     if (!client.queue.get(message.guild.id) || !client.queue.get(message.guild.id).connection) {
-        return message.reply('¡No estoy actualmente en uso!');
+        return message.reply(strings[guild.language].botNotInUse);
     }
 
     const serverQueue = client.queue.get(message.guild.id);
 
     if (message.channel !== serverQueue.textChannel) {
-        return message.reply(`Estoy actualmente en uso en <#${serverQueue.voiceChannel.id}> y <#${serverQueue.textChannel.id}>, puedes usar \`${client.prefix}transfer\` para cambiar el canal de texto de la sesión`)
+        return message.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id).replace('%PREFIX', client.prefix));
     }
 
     if (!message.member.voice.channel || message.member.voice.channel !== serverQueue.voiceChannel) {
-        return message.reply('¡No estás conectado al mismo canal de voz que yo!')
+        return message.reply(strings[guild.language].userNotConnectedToSameVoice);
     }
 
-    serverQueue.textChannel.send(`Reproductor detenido, abandonando **<#${serverQueue.voiceChannel.id}>**`);
+    serverQueue.textChannel.send(strings[guild.language].botLeftChannel.replace('%VOICECHANNEL%', serverQueue.voiceChannel.id));
 
     if (serverQueue.playingEmbed) {
         serverQueue.playingEmbed.delete();
@@ -27,10 +27,8 @@ module.exports.run = (client, message, args) => {
     client.queue.delete(message.guild.id);
 }
 
-module.exports.help = {
+module.exports.info = {
     name: "leave",
-    description: "Parar el reproductor, limpiar la cola de música y abandonar el canal de voz",
-    usage: "Utilizar solamente el comando",
     alias: "l"
 }
 

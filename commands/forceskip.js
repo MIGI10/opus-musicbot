@@ -1,44 +1,40 @@
 const ytdl = require('ytdl-core');
 const youtubedl = require('youtube-dl-exec').raw;
 
-module.exports.run = async (client, message, args) => {
+module.exports.run = async (client, message, args, guild) => {
 
     voice = client.discordjsvoice
 
     if (!client.queue.get(message.guild.id) || !client.queue.get(message.guild.id).connection) {
-        return message.reply('¡No estoy actualmente en uso!');
+        return message.reply(strings[guild.language].botNotInUse);
     }
 
     const serverQueue = client.queue.get(message.guild.id);
 
     if (message.channel !== serverQueue.textChannel) {
-        return message.reply(`Estoy actualmente en uso en <#${serverQueue.voiceChannel.id}> y <#${serverQueue.textChannel.id}>, puedes usar \`${client.prefix}transfer\` para cambiar el canal de texto de la sesión`)
+        return message.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id).replace('%PREFIX', client.prefix))
     }
 
     if (!message.member.voice.channel || message.member.voice.channel != serverQueue.voiceChannel) {
-        return message.reply('¡No estás conectado al mismo canal de voz que yo!')
+        return message.reply(strings[guild.language].userNotConnectedToSameVoice)
     }
 
     if (!serverQueue.playing) {
-        return message.reply('El reproductor está detenido')
+        return message.reply(strings[guild.language].botPlayerStopped)
     }
 
     if (serverQueue.updating) {
-        return message.reply('La cola está siendo actualizada, espere unos segundos a que finalice')
+        return message.reply(strings[guild.language].botIsUpdating2)
             .then(msg => setTimeout(() => { 
                 msg.delete(); 
                 message.delete() 
             }, 5000))
     }
 
-    const guildSaved = await client.db.guild.findOne({ 
-        id: message.guild.id,
-    }).catch(err => console.log(err));
-
     const nowPlaying = serverQueue.songs[0];
 
-    if (!message.member.roles.cache.has(guildSaved.modRoleId) && message.author.id != nowPlaying.requesterId) {
-        return message.reply(`Solo puede usar \`${client.prefix}forceskip\` la persona que ha solicitado la canción que suena actualmente (${nowPlaying.requesterUsertag}) o un moderador.`);
+    if (!message.member.roles.cache.has(guild.modRoleId) && message.author.id != nowPlaying.requesterId) {
+        return message.reply(strings[guild.language].forceskipNotAllowed.replace('%PREFIX%', client.prefix).replace('%REQUESTER%', nowPlaying.requesterUsertag));
     }
 
     serverQueue.playingEmbed.delete();
@@ -79,14 +75,14 @@ module.exports.run = async (client, message, args) => {
 
                 serverQueue.playing = false;
                 serverQueue.player.stop();
-                serverQueue.textChannel.send('No hay más canciones en la cola, reproductor detenido')
+                serverQueue.textChannel.send(strings[guild.language].botPlayerStoppedNoSongs)
 
                 serverQueue.inactivity = setTimeout(() => {
 
                     if (!serverQueue.playing && !serverQueue.songs[0]) {
 
                         client.queue.delete(serverQueue.textChannel.guild.id);
-                        serverQueue.textChannel.send('He estado inactivo durante más de un minuto, canal de voz abandonado')
+                        serverQueue.textChannel.send(strings[guild.language].botInactiveForAMinute)
                         
                         if (serverQueue.connection._state.status != 'destroyed') {
                             serverQueue.connection.destroy();
@@ -132,9 +128,9 @@ module.exports.run = async (client, message, args) => {
         song.pauseTimestamps = [];
 
         const nowPlayingEmbed = new client.discordjs.MessageEmbed()
-        .setAuthor(`Ahora Suena`, client.user.displayAvatarURL({dynamic: true, size: 1024}))
+        .setAuthor(strings[guild.language].songNowPlaying, client.user.displayAvatarURL({dynamic: true, size: 1024}))
         .setTitle(`${song.title} [${song.duration}]`)
-        .setFooter(`Solicitado por ${song.requesterUsertag}`)
+        .setFooter(strings[guild.language].songRequestedBy.replace('%REQUESTER%', song.requesterUsertag))
         .setURL(song.url)
         .setColor(65453)
 
@@ -144,10 +140,8 @@ module.exports.run = async (client, message, args) => {
     }
 }
 
-module.exports.help = {
+module.exports.info = {
     name: "forceskip",
-    description: "Saltar la canción que suena sin la aprobación de la mitad de usuarios",
-    usage: "Solamente la persona que haya solicitado la canción que suena o un moderador puede utilizar el comando",
     alias: "fs"
 }
 

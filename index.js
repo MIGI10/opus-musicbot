@@ -55,6 +55,7 @@ setTimeout(dbConnect, 5000);
 const guildSchema = new db.Schema({
     id: String,
     name: String,
+    language: String,
     memberCount: Number,
     ownerId: String,
     ownerTag: String,
