@@ -40,6 +40,8 @@ module.exports = (client, oldState, newState) => {
                 
                 if (newState.channel.members.size == 1) {
 
+                    clearTimeout(serverQueue.inactivity);
+
                     serverQueue.inactivity = setTimeout(() => {
 
                         serverQueue.textChannel.send('Me he quedado solo :(, canal de voz abandonado');
