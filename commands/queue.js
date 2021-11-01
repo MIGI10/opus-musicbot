@@ -1,22 +1,22 @@
 const { Interaction } = require("discord.js");
 
-module.exports.run = async (client, message, args) => {
+module.exports.run = async (client, message, args, guild) => {
 
     const MessageActionRow = client.discordjs.MessageActionRow;
     const MessageButton = client.discordjs.MessageButton;
 
     if (!client.queue.get(message.guild.id) || !client.queue.get(message.guild.id).connection) {
-        return message.reply('¡No estoy actualmente en uso!');
+        return message.reply(strings[guild.language].botNotInUse);
     }
 
     const serverQueue = client.queue.get(message.guild.id);
 
     if (message.channel !== serverQueue.textChannel) {
-        return message.reply(`Estoy actualmente en uso en <#${serverQueue.voiceChannel.id}> y <#${serverQueue.textChannel.id}>, puedes usar \`${client.prefix}transfer\` para cambiar el canal de texto de la sesión`)
+        return message.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id).replace('%PREFIX', client.prefix))
     }
 
     if (serverQueue.updating) {
-        return message.reply('La cola está siendo actualizada, espere unos segundos a que finalice')
+        return message.reply(strings[guild.language].botIsUpdating2)
             .then(msg => setTimeout(() => { 
                 msg.delete(); 
                 message.delete() 
@@ -25,22 +25,22 @@ module.exports.run = async (client, message, args) => {
 
     let firstPageButton = new MessageButton()
         .setCustomId('first_page')
-        .setLabel('First Page')
+        .setEmoji('⏮')
         .setStyle('SECONDARY');
 
     let backPageButton = new MessageButton()
         .setCustomId('back_page')
-        .setLabel('Back')
-        .setStyle('DANGER');
+        .setEmoji('◀️')
+        .setStyle('SECONDARY');
 
     let nextPageButton = new MessageButton()
         .setCustomId('next_page')
-        .setLabel('Next')
-        .setStyle('SUCCESS');
+        .setEmoji('▶️')
+        .setStyle('SECONDARY');
 
     let lastPageButton = new MessageButton()
         .setCustomId('last_page')
-        .setLabel('Last Page')
+        .setEmoji('⏭')
         .setStyle('SECONDARY');
 
     let row = new MessageActionRow()
@@ -53,7 +53,7 @@ module.exports.run = async (client, message, args) => {
 
     if (!serverQueue.songs[0]) {
 
-        message.reply('No hay canciones en la cola');
+        message.reply(strings[guild.language].botNoQueuedSongs);
 
     } else {
 
@@ -68,7 +68,7 @@ module.exports.run = async (client, message, args) => {
         } else {
 
             for (let i = 1; (serverQueue.songs.length - 1) >= i && i <= 6; i++) {
-                queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, `Solicitado por ${serverQueue.songs[i].requesterUsertag}`)
+                queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, strings[guild.language].songRequestedBy.replace('%REQUESTER%', serverQueue.songs[i].requesterUsertag))
             }
 
             const msg = await message.channel.send({ embeds: [queueEmbed], components: [row]});
@@ -99,10 +99,10 @@ module.exports.run = async (client, message, args) => {
                         queueEmbed = await nowPlaying(serverQueue, message);
 
                         for (let i = firstSongInPage; (firstSongInPage + 5) >= i && totalSongs >= i; i++) {
-                            queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, `Solicitado por ${serverQueue.songs[i].requesterUsertag}`)
+                            queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, strings[guild.language].songRequestedBy.replace('%REQUESTER%', serverQueue.songs[i].requesterUsertag))
                         }
         
-                        queueEmbed.setFooter(`Página ${Math.ceil(firstSongInPage / 6)} de ${Math.ceil(totalSongsQuotient)}`)
+                        queueEmbed.setFooter(strings[guild.language].pageNumber.replace('%PAGENUM%', Math.ceil(firstSongInPage / 6)).replace('%TOTALPAGECOUNT%', Math.ceil(totalSongsQuotient)))
         
                         await int.update({ embeds: [queueEmbed], components: [row] });
 
@@ -123,10 +123,10 @@ module.exports.run = async (client, message, args) => {
                         queueEmbed = await nowPlaying(serverQueue, message);
 
                         for (let i = firstSongInPage; (firstSongInPage + 5) >= i && totalSongs >= i; i++) {
-                            queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, `Solicitado por ${serverQueue.songs[i].requesterUsertag}`)
+                            queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, strings[guild.language].songRequestedBy.replace('%REQUESTER%', serverQueue.songs[i].requesterUsertag))
                         }
 
-                        queueEmbed.setFooter(`Página ${Math.ceil(firstSongInPage / 6)} de ${Math.ceil(totalSongsQuotient)}`)
+                        queueEmbed.setFooter(strings[guild.language].pageNumber.replace('%PAGENUM%', Math.ceil(firstSongInPage / 6)).replace('%TOTALPAGECOUNT%', Math.ceil(totalSongsQuotient)))
 
                         await int.update({ embeds: [queueEmbed], components: [row] });
 
@@ -241,11 +241,11 @@ module.exports.run = async (client, message, args) => {
             1;
 
         const queueEmbed = new client.discordjs.MessageEmbed()
-            .setTitle(`Cola de ${message.guild.name}`)
+            .setTitle(strings[guild.language].queueName.replace('%NAME%', message.guild.name))
             .setDescription(`Loop: ${loopStatus} | Shuffle: ${shuffleStatus}`)
-            .addField('**Ahora Suena:**', `Solicitado por ${queue.songs[0].requesterUsertag}\n\`\`\`nim\n${queue.songs[0].title.replaceAll(`\\||`, `||`)}\n\n${timeBar}\n\`\`\``)
+            .addField(`**${strings[guild.language].songNowPlaying}:**`, `${strings[guild.language].songRequestedBy.replace('%REQUESTER%', serverQueue.songs[0].requesterUsertag)}\n\`\`\`nim\n${queue.songs[0].title.replaceAll(`\\||`, `||`)}\n\n${timeBar}\n\`\`\``)
             .setColor(65453)
-            .setFooter(`Página 1 de ${totalPages}`)
+            .setFooter(strings[guild.language].pageNumber.replace('%PAGENUM%', 1).replace('%TOTALPAGECOUNT%', totalPages))
 
         return queueEmbed;
     }
@@ -258,10 +258,10 @@ module.exports.run = async (client, message, args) => {
         const totalSongsQuotient = totalSongs / 6;
 
         for (let i = 1; totalSongs >= i && i <= 6; i++) {
-            queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, `Solicitado por ${serverQueue.songs[i].requesterUsertag}`)
+            queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, strings[guild.language].songRequestedBy.replace('%REQUESTER%', serverQueue.songs[i].requesterUsertag))
         }
 
-        queueEmbed.setFooter(`Página 1 de ${Math.ceil(totalSongsQuotient)}`)
+        queueEmbed.setFooter(strings[guild.language].pageNumber.replace('%PAGENUM%', 1).replace('%TOTALPAGECOUNT%', Math.ceil(totalSongsQuotient)))
 
         return await int.update({ embeds: [queueEmbed], components: [row] });
     }
@@ -275,19 +275,17 @@ module.exports.run = async (client, message, args) => {
         const firstSongInPage = (6 * Math.ceil(totalSongsQuotient - 1)) + 1;
 
         for (let i = firstSongInPage; totalSongs >= i; i++) {
-            queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, `Solicitado por ${serverQueue.songs[i].requesterUsertag}`)
+            queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, strings[guild.language].songRequestedBy.replace('%REQUESTER%', serverQueue.songs[i].requesterUsertag))
         }
 
-        queueEmbed.setFooter(`Página ${Math.ceil(totalSongsQuotient)} de ${Math.ceil(totalSongsQuotient)}`)
+        queueEmbed.setFooter(strings[guild.language].pageNumber.replace('%PAGENUM%', Math.ceil(totalSongsQuotient)).replace('%TOTALPAGECOUNT%', Math.ceil(totalSongsQuotient)))
 
         return await int.update({ embeds: [queueEmbed], components: [row] });
     }
 }
 
-module.exports.help = {
+module.exports.info = {
     name: "queue",
-    description: "Ver la cola de música del servidor y la canción que suena actualmente",
-    usage: "Utilizar solamente el comando",
     alias: "q"
 }
 

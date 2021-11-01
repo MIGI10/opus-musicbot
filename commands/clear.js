@@ -1,40 +1,36 @@
-module.exports.run = async (client, message, args) => {
+module.exports.run = async (client, message, args, guild) => {
 
     if (!client.queue.get(message.guild.id) || !client.queue.get(message.guild.id).connection) {
-        return message.reply('¡No estoy actualmente en uso!');
+        return message.reply(strings[guild.language].botNotInUse);
     }
 
     const serverQueue = client.queue.get(message.guild.id);
 
     if (message.channel !== serverQueue.textChannel) {
-        return message.reply(`Estoy actualmente en uso en <#${serverQueue.voiceChannel.id}> y <#${serverQueue.textChannel.id}>, puedes usar \`${client.prefix}transfer\` para cambiar el canal de texto de la sesión`)
+        return message.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id).replace('%PREFIX', client.prefix))
     }
 
     if (!message.member.voice.channel || message.member.voice.channel !== serverQueue.voiceChannel) {
-        return message.reply('¡No estás conectado al mismo canal de voz que yo!')
+        return message.reply(strings[guild.language].userNotConnectedToSameVoice)
     }
 
     if (!serverQueue.songs[0]) {
-        return message.reply('No hay canciones en la cola')
+        return message.reply(strings[guild.language].botNoQueuedSongs)
     }
 
     const usersConnected = serverQueue.voiceChannel.members.size - 1;
 
     if (serverQueue.updating) {
-        return message.reply('Se están añadiendo canciones a la cola, debes esperar a que termine para poder limpiar la cola');
+        return message.reply(strings[guild.language].botIsUpdating3);
     }
 
-    const guildSaved = await client.db.guild.findOne({ 
-        id: message.guild.id,
-    }).catch(err => console.log(err));
-
-    if (usersConnected <= 2 || message.member.roles.cache.has(guildSaved.modRoleId)) {
+    if (usersConnected <= 2 || message.member.roles.cache.has(guild.modRoleId)) {
 
         await clear();
 
     } else {
 
-        message.channel.send(`Para limpiar la cola del servidor, **${(Math.ceil(usersConnected*0.5))-1}** persona(s) más de las ${usersConnected} conectadas deben enviar \`${client.prefix}clear\` en menos de 20 segundos.`);
+        message.channel.send(strings[guild.language].skipMessage.replace('%USERCOUNT%', (Math.ceil(usersConnected*0.5))-1).replace('%TOTALUSERCOUNT%', usersConnected).replace('%PREFIX%', client.prefix));
 
         let filter = m => m.content.split(' ')[0] == `${client.prefix}clear` && m.author.id !== message.author.id && m.member.voice.channel && m.member.voice.channel == serverQueue.voiceChannel;
 
@@ -51,7 +47,7 @@ module.exports.run = async (client, message, args) => {
             }
         })
         .catch(collected => {
-            return message.channel.send(`Clear cancelado.`);
+            return message.channel.send(strings[guild.language].clearCancelled);
         });
     }
 
@@ -65,14 +61,14 @@ module.exports.run = async (client, message, args) => {
         serverQueue.songs = [];
         serverQueue.player.stop();
 
-        message.channel.send('Se ha limpiado la cola y se ha detenido el reproductor');
+        message.channel.send(strings[guild.language].clearComplete);
 
         serverQueue.inactivity = setTimeout(() => {
 
             if (!serverQueue.playing && !serverQueue.songs[0]) {
 
                 client.queue.delete(serverQueue.textChannel.guild.id);
-                serverQueue.textChannel.send('He estado inactivo durante 3 minutos, canal de voz abandonado')
+                serverQueue.textChannel.send(strings[guild.language].botInactiveFor3Minutes)
                 
                 if (serverQueue.connection._state.status != 'destroyed') {
                     serverQueue.connection.destroy();
@@ -83,10 +79,8 @@ module.exports.run = async (client, message, args) => {
     }
 }
 
-module.exports.help = {
+module.exports.info = {
     name: "clear",
-    description: "Limpiar la cola de música, al menos la mitad de los usuarios conectados deben estar de acuerdo",
-    usage: "La mitad de las personas conectadas al canal de voz deben utilizar el comando en menos de 20 segundos a partir del primer `clear`",
     alias: "c"
 }
 

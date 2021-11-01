@@ -1,11 +1,18 @@
-const changelog = require('../changelog.json');
+const spaChangelog = require('../changelog/changelog-spa.json');
+const engChangelog = require('../changelog/changelog-eng.json');
 
-module.exports.run = async (client, message, args) => {
+module.exports.run = async (client, message, args, guild) => {
     
     const changelogEmbed = new client.discordjs.MessageEmbed()
         .setTitle(`Changelog | Opus Music Bot`)
         .setColor(65453)
-        .setFooter(`Opus Music Bot v${client.config.version} · Desarrollado por migi28#7731`, client.user.displayAvatarURL({dynamic: true, size: 1024}))
+        .setFooter(`Opus Music Bot v${client.config.version} · ${strings[guild.language].botDevelopedBy}`, client.user.displayAvatarURL({dynamic: true, size: 1024}))
+
+    if (guild.language == 'spa') {
+        changelog = spaChangelog;
+    } else {
+        changelog = engChangelog;
+    }
     
     for (const version in changelog.versions) {
 
@@ -21,10 +28,8 @@ module.exports.run = async (client, message, args) => {
     message.channel.send({ embeds: [changelogEmbed]})
 }
 
-module.exports.help = {
+module.exports.info = {
     name: "changelog",
-    description: "Muestra los cambios y actualizaciones del bot",
-    usage: "Únicamente debe ejecutarse el comando",
     alias: ""
 }
 

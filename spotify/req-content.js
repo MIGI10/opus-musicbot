@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 const reqAuth = require('./req-authorization');
 
-module.exports.run = async (client, message, args) => {
+module.exports.run = async (client, message, args, guild) => {
 
     if (args[1] && !isNaN(args[1])) {
         var offset = parseInt(args[1]);
@@ -30,15 +30,15 @@ module.exports.run = async (client, message, args) => {
         }
 
         if (response.status == 403) {
-            return message.reply('¡Esa playlist no se puede cargar por ser privada!')
+            return message.reply(strings[guild.language].playlistPrivate)
         }
 
         if (args.includes('reverse')) {
 
             if (offset) {
-                message.channel.send(`Se ha solicitado que se empiece por la canción ${offset} y que posteriormente se añadan de forma invertida`);
+                message.channel.send(strings[guild.language].playlistOffsetReverse.replace('%OFFSET%', offset));
             } else {
-                message.channel.send(`Se ha solicitado que las canciones se añadan de forma invertida`)
+                message.channel.send(strings[guild.language].playlistReverse)
             }
 
             for (let i = query.items.length - 1; i >= 0; i--) {
@@ -49,7 +49,7 @@ module.exports.run = async (client, message, args) => {
         } else {
 
             if (offset) {
-                message.channel.send(`Se ha solicitado que se empiece por la canción ${offset}`)
+                message.channel.send(strings[guild.language].playlistOffset.replace('%OFFSET%', offset));
             }
 
             for (const item of query.items) {
@@ -107,9 +107,9 @@ module.exports.run = async (client, message, args) => {
         if (args.includes('reverse')) {
 
             if (offset) {
-                message.channel.send(`Se ha solicitado que se empiece por la canción ${offset} y que posteriormente se añadan de forma invertida`);
+                message.channel.send(strings[guild.language].playlistOffsetReverse.replace('%OFFSET%', offset));
             } else {
-                message.channel.send(`Se ha solicitado que las canciones se añadan de forma invertida`)
+                message.channel.send(strings[guild.language].playlistReverse)
             }
 
             for (let i = query.items.length - 1; i >= 0; i--) {
@@ -120,7 +120,7 @@ module.exports.run = async (client, message, args) => {
         } else {
 
             if (offset) {
-                message.channel.send(`Se ha solicitado que se empiece por la canción ${offset}`)
+                message.channel.send(strings[guild.language].playlistOffset.replace('%OFFSET%', offset))
             }
 
             for (const item of query.items) {
