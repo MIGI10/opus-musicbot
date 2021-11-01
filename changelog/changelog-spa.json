@@ -13,7 +13,7 @@
             "Nuevos comandos `changelog`, `invite`",
             "Mejoras de rendimiento"
         ],
-        "2.1 - 31/10/21": [
+        "2.1 - 01/11/21": [
             "Nuevo comando `lyrics`, muestra el lyrics de la canción que suena o de una canción proporcionada",
             "Ahora el idioma del bot se puede cambiar con `config`, idiomas disponibles: Español y Inglés"
         ]

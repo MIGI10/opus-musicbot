@@ -25,22 +25,22 @@ module.exports.run = async (client, message, args, guild) => {
 
     let firstPageButton = new MessageButton()
         .setCustomId('first_page')
-        .setLabel('First Page')
+        .setEmoji('⏮')
         .setStyle('SECONDARY');
 
     let backPageButton = new MessageButton()
         .setCustomId('back_page')
-        .setLabel('Back')
-        .setStyle('DANGER');
+        .setEmoji('◀️')
+        .setStyle('SECONDARY');
 
     let nextPageButton = new MessageButton()
         .setCustomId('next_page')
-        .setLabel('Next')
-        .setStyle('SUCCESS');
+        .setEmoji('▶️')
+        .setStyle('SECONDARY');
 
     let lastPageButton = new MessageButton()
         .setCustomId('last_page')
-        .setLabel('Last Page')
+        .setEmoji('⏭')
         .setStyle('SECONDARY');
 
     let row = new MessageActionRow()
@@ -102,7 +102,7 @@ module.exports.run = async (client, message, args, guild) => {
                             queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, strings[guild.language].songRequestedBy.replace('%REQUESTER%', serverQueue.songs[i].requesterUsertag))
                         }
         
-                        queueEmbed.setFooter(strings[guild.language].pageNumber.replace('%PAGENUM%', Math.ceil(firstSongInPage / 6)).replace('%TOTALPAGECOUNT', Math.ceil(totalSongsQuotient)))
+                        queueEmbed.setFooter(strings[guild.language].pageNumber.replace('%PAGENUM%', Math.ceil(firstSongInPage / 6)).replace('%TOTALPAGECOUNT%', Math.ceil(totalSongsQuotient)))
         
                         await int.update({ embeds: [queueEmbed], components: [row] });
 
@@ -126,7 +126,7 @@ module.exports.run = async (client, message, args, guild) => {
                             queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, strings[guild.language].songRequestedBy.replace('%REQUESTER%', serverQueue.songs[i].requesterUsertag))
                         }
 
-                        queueEmbed.setFooter(strings[guild.language].pageNumber.replace('%PAGENUM%', Math.ceil(firstSongInPage / 6)).replace('%TOTALPAGECOUNT', Math.ceil(totalSongsQuotient)))
+                        queueEmbed.setFooter(strings[guild.language].pageNumber.replace('%PAGENUM%', Math.ceil(firstSongInPage / 6)).replace('%TOTALPAGECOUNT%', Math.ceil(totalSongsQuotient)))
 
                         await int.update({ embeds: [queueEmbed], components: [row] });
 
@@ -241,11 +241,11 @@ module.exports.run = async (client, message, args, guild) => {
             1;
 
         const queueEmbed = new client.discordjs.MessageEmbed()
-            .setTitle(`Cola de ${message.guild.name}`)
+            .setTitle(strings[guild.language].queueName.replace('%NAME%', message.guild.name))
             .setDescription(`Loop: ${loopStatus} | Shuffle: ${shuffleStatus}`)
             .addField(`**${strings[guild.language].songNowPlaying}:**`, `${strings[guild.language].songRequestedBy.replace('%REQUESTER%', serverQueue.songs[0].requesterUsertag)}\n\`\`\`nim\n${queue.songs[0].title.replaceAll(`\\||`, `||`)}\n\n${timeBar}\n\`\`\``)
             .setColor(65453)
-            .setFooter(strings[guild.language].pageNumber.replace('%PAGENUM%', 1).replace('%TOTALPAGECOUNT', totalPages))
+            .setFooter(strings[guild.language].pageNumber.replace('%PAGENUM%', 1).replace('%TOTALPAGECOUNT%', totalPages))
 
         return queueEmbed;
     }
@@ -261,7 +261,7 @@ module.exports.run = async (client, message, args, guild) => {
             queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, strings[guild.language].songRequestedBy.replace('%REQUESTER%', serverQueue.songs[i].requesterUsertag))
         }
 
-        queueEmbed.setFooter(strings[guild.language].pageNumber.replace('%PAGENUM%', 1).replace('%TOTALPAGECOUNT', Math.ceil(totalSongsQuotient)))
+        queueEmbed.setFooter(strings[guild.language].pageNumber.replace('%PAGENUM%', 1).replace('%TOTALPAGECOUNT%', Math.ceil(totalSongsQuotient)))
 
         return await int.update({ embeds: [queueEmbed], components: [row] });
     }
@@ -278,7 +278,7 @@ module.exports.run = async (client, message, args, guild) => {
             queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, strings[guild.language].songRequestedBy.replace('%REQUESTER%', serverQueue.songs[i].requesterUsertag))
         }
 
-        queueEmbed.setFooter(strings[guild.language].pageNumber.replace('%PAGENUM%', Math.ceil(totalSongsQuotient)).replace('%TOTALPAGECOUNT', Math.ceil(totalSongsQuotient)))
+        queueEmbed.setFooter(strings[guild.language].pageNumber.replace('%PAGENUM%', Math.ceil(totalSongsQuotient)).replace('%TOTALPAGECOUNT%', Math.ceil(totalSongsQuotient)))
 
         return await int.update({ embeds: [queueEmbed], components: [row] });
     }

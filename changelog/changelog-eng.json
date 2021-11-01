@@ -13,7 +13,7 @@
             "New commands `changelog`, `invite`",
             "Performance improvements"
         ],
-        "2.1 - 31/10/21": [
+        "2.1 - 01/11/21": [
             "New command `lyrics`, shows lyrics of currently playing or specified song",
             "Language can be changed now with `config`, available languages: Spanish and English"
         ]
