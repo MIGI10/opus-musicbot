@@ -21,10 +21,8 @@ module.exports.run = async (client, message, args) => {
     message.channel.send('Successfully reloaded events and commands!');
 }
 
-module.exports.help = {
+module.exports.info = {
     name: "reload",
-    description: "Reload events and commands",
-    usage: "",
     alias: ""
 }
 

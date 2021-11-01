@@ -1,90 +1,162 @@
-module.exports.run = async (client, message, args) => {
+module.exports.run = async (client, message, args, guild) => {
 
-    const guildSaved = await client.db.guild.findOne({ 
-        id: message.guild.id,
-    }).catch(err => console.log(err));
+    if (!guild) {
 
-    if (!guildSaved) {
+        const MessageActionRow = client.discordjs.MessageActionRow;
+        const MessageButton = client.discordjs.MessageButton;
+    
+        let spanishButton = new MessageButton()
+            .setCustomId('spa_button')
+            .setLabel('Español')
+            .setStyle('PRIMARY');
+    
+        let englishButton = new MessageButton()
+            .setCustomId('eng_button')
+            .setLabel('English')
+            .setStyle('PRIMARY');
+    
+        let row = new MessageActionRow()
+            .addComponents(
+                spanishButton,
+                englishButton
+            );
+
         if (message.member.permissions.has('MANAGE_MESSAGES', true)) {
-            message.channel.send(`¡Gracias por añadirme a **${message.guild.name}**!\n\nAntes de poder funcionar en el servidor, necesito que envíes por aquí la ID del rol de moderadores (los usuarios con este rol podrán utilizar \`${client.prefix}clear\` y \`${client.prefix}forceskip\` sin restricción aunque haya más de una persona conectada). En caso de no saber copiar la ID del rol, consulta este artículo: https://docs.discordsafe.com/docs/ayuda/copiar-ids`)
-            
-            let filter = m => m.author.id == message.author.id && m.content.split(' ')[0].length > 15;
 
-            message.channel.awaitMessages({
-                filter,
-                max: 1,
-                time: 120000,
-                errors: ['time']
-            })
-            .then(async (collected) => {
-                modRole = collected.first().content;
+            const setupMsg = await message.channel.send({ content: 'Escoge un idioma:\nChoose a language:', components: [row]});
 
-                const guildRoles = await message.guild.roles.fetch();
+            const filter = i => i.member.id === message.author.id;
 
-                if (guildRoles.has(modRole)) {
+            const collector = message.channel.createMessageComponentCollector({
+                    filter, 
+                    time: 30000 
+                });
 
-                    const owner = await message.guild.fetchOwner();
-
-                    const guildDoc = new client.db.guild({
-                        id: message.guild.id,
-                        name: message.guild.name,
-                        memberCount: message.guild.memberCount,
-                        ownerId: message.guild.ownerId,
-                        ownerTag: owner.user.tag, //
-                        modRoleId: modRole,
-                        joinedAt: message.guild.joinedAt,
-                        createdAt: message.guild.createdAt,
-                        isPartnered: message.guild.partnered,
-                        isVerified: message.guild.verified,
-                        boostCount: message.guild.premiumSubscriptionCount,
-                        description: message.guild.description
-                    })
-
-                    await guildDoc.save().catch(err => console.log(err));
-
-                    message.channel.send('¡He sido configurado con éxito!')
-                     
-                } else {
-                    message.channel.send('Esa ID no corresponde a un rol del servidor, asegúrate de haber copiado correctamente la ID y vuelve a ejecutar el comando')
+            collector.once('collect', async int => {
+                
+                if (int.customId == 'spa_button') {
+                    lang = 'spa';
                 }
-            })
-            .catch(collected => {
-                return message.channel.send(`No he recibido la ID por parte de <@${message.author.id}>, vuelve a ejecutar el comando.`);
+
+                if (int.customId == 'eng_button') {
+                    lang = 'eng';
+                }
+
+                setupMsg.edit({ components: [] });
+
+                setupMsg.edit(strings[lang].setupMsg.replace('%GUILDNAME%', message.guild.name).replaceAll('%PREFIX%', client.prefix))
+            
+                let msgFilter = m => m.author.id == message.author.id && m.content.split(' ')[0].length > 15;
+
+                message.channel.awaitMessages({
+                    msgFilter,
+                    max: 1,
+                    time: 120000,
+                    errors: ['time']
+                })
+                .then(async (collected) => {
+                    modRole = collected.first().content;
+
+                    const guildRoles = await message.guild.roles.fetch();
+
+                    if (guildRoles.has(modRole)) {
+
+                        const owner = await message.guild.fetchOwner();
+
+                        const guildDoc = new client.db.guild({
+                            id: message.guild.id,
+                            name: message.guild.name,
+                            language: lang,
+                            memberCount: message.guild.memberCount,
+                            ownerId: message.guild.ownerId,
+                            ownerTag: owner.user.tag,
+                            modRoleId: modRole,
+                            joinedAt: message.guild.joinedAt,
+                            createdAt: message.guild.createdAt,
+                            isPartnered: message.guild.partnered,
+                            isVerified: message.guild.verified,
+                            boostCount: message.guild.premiumSubscriptionCount,
+                            description: message.guild.description
+                        })
+
+                        await guildDoc.save().catch(err => console.log(err));
+
+                        setupMsg.edit(strings[lang].setupComplete.replace('%PREFIX%', client.prefix));
+                        
+                    } else {
+                        setupMsg.edit(strings[lang].setupInvalidRole);
+                    }
+                })
+                .catch(collected => {
+                    return setupMsg.edit(strings[lang].setupTimeout.replace('%USER%', message.author.id));
+                });
             });
+
+            collector.once('end', collected => {
+
+                if (collected.size === 0) {
+                    setupMsg.edit({ components: [] });
+                    return setupMsg.edit(`No se ha escogido ningún idioma, vuelve a ejecutar el comando.\nNo language has been selected, execute the command again.`);
+                }
+            });
+
         } else {
-            message.reply(`Solamente un usuario con el permiso \`MANAGE_MESSAGES\` puede iniciar la configuración`)
+            message.reply(`Solamente los usuarios con el permiso \`MANAGE_MESSAGES\` pueden iniciar la configuración\nOnly users with \`MANAGE_MESSAGES\` permission can start the configuration`)
         }
+
     } else {
 
-        if (message.member.roles.cache.has(guildSaved.modRoleId)) {
+        if (message.member.roles.cache.has(guild.modRoleId)) {
+
             if (!args[0]) {
-                message.channel.send('¡Ya estoy configurado y listo para funcionar! Si deseas modificar el rol de moderador guardado vuelve a ejecutar el comando seguido de la ID del rol que deseas asignar');
+
+                message.channel.send(strings[guild.language].configInstructions);
+            
             } else {
 
-                const guildRoles = await message.guild.roles.fetch();
+                if (args[0] === 'spa') {
 
-                if (guildRoles.has(args[0])) {
+                    guild.language = 'spa';
 
-                    guildSaved.modRoleId = args[0];
+                    await guild.save().catch(err => console.log(err));
 
-                    await guildSaved.save().catch(err => console.log(err));
+                    message.channel.send(strings['spa'].configLanguageUpdated);
 
-                    message.channel.send('¡Se ha actualizado el rol de moderador con éxito!')
-                     
+                } else if (args[0] === 'eng') {
+
+                    guild.language = 'eng';
+
+                    await guild.save().catch(err => console.log(err));
+
+                    message.channel.send(strings['eng'].configLanguageUpdated);
+
+                } else if (args[0].length > 15) {
+
+                    const guildRoles = await message.guild.roles.fetch();
+
+                    if (guildRoles.has(args[0])) {
+
+                        guild.modRoleId = args[0];
+
+                        await guild.save().catch(err => console.log(err));
+
+                        message.channel.send(strings[guild.language].configModRoleUodated)
+                        
+                    } else {
+                        message.channel.send(strings[guild.language].setupInvalidRole)
+                    }
                 } else {
-                    message.channel.send('Esa ID no corresponde a un rol del servidor, asegúrate de haber copiado correctamente la ID y vuelve a ejecutar el comando')
+                    message.reply(strings[guild.language].configMustSpecifySomething)
                 }
-            }
+            } 
         } else {
-            message.reply('¡No tienes permiso para ejecutar este comando!')
+            message.reply(strings[guild.language].configNotAMod)
         }
     }
 }
 
-module.exports.help = {
+module.exports.info = {
     name: "config",
-    description: "Configurar el bot para su uso en el servidor actual",
-    usage: "Un moderador o administrador debe ejecutar el comando y seguir las instrucciones para configurar el bot",
     alias: ""
 }
 

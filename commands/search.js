@@ -2,9 +2,9 @@ const youtubeSearch = require('youtube-search-api');
 const fs = require("fs");
 const path = require('path');
 
-module.exports.run = async (client, message, args) => {
+module.exports.run = async (client, message, args, guild) => {
 
-    if (!args[0]) return message.reply('Debes especificar el nombre de una canción')
+    if (!args[0]) return message.reply(strings[guild.language].userMustSpecifySong)
 
     args = args.join(' ');
 
@@ -45,18 +45,16 @@ module.exports.run = async (client, message, args) => {
     }
 
     const videoListEmbed = new client.discordjs.MessageEmbed()
-    .setAuthor(`Search Results "${args}"`, client.user.displayAvatarURL({dynamic: true, size: 1024}))
+    .setAuthor(`${strings[guild.language].searchResults} "${args}"`, client.user.displayAvatarURL({dynamic: true, size: 1024}))
     .setDescription(embedList)
-    .setFooter('Para reproducir una canción: o!play <ID de la canción>')
+    .setFooter(strings[guild.language].searchHowToPlay.replace('%PREFIX%', client.prefix))
     .setColor(65453)
 
     message.channel.send({ embeds: [videoListEmbed]});
 }
 
-module.exports.help = {
+module.exports.info = {
     name: "search",
-    description: "Buscar una canción en YouTube",
-    usage: "Usar el comando seguido del nombre de la canción",
     alias: ""
 }
 

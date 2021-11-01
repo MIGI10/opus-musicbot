@@ -18,10 +18,8 @@ module.exports.run = async (client, message, args) => {
     message.channel.send({ embeds: [evalEmbed]})
 }
 
-module.exports.help = {
+module.exports.info = {
     name: "eval",
-    description: "Evaluate JS code",
-    usage: "",
     alias: ""
 }
 
