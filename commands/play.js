@@ -48,11 +48,11 @@ module.exports.run = async (client, message, args, guild) => {
                 } else {
                     clearTimeout(serverQueue.inactivity);
                     serverQueue.inactivity = null;
-                    preQueue(args, message);
-                    setTimeout(async function() {
-                        await play(serverQueue.songs[0], serverQueue, false);
-                    }, 3000);
-                    return
+
+                    await preQueue(args, message);
+                    await play(serverQueue.songs[0], serverQueue, false);
+
+                    return;
                 }
             } else {
                     clearTimeout(serverQueue.inactivity);
@@ -91,7 +91,7 @@ module.exports.run = async (client, message, args, guild) => {
             return message.channel.send(strings[guild.language].botNeedsPermsToConnect);
         }
 
-        preQueue(args, message);
+        await preQueue(args, message);
 
         try {
             var connection = voice.joinVoiceChannel({
@@ -101,57 +101,6 @@ module.exports.run = async (client, message, args, guild) => {
             });
 
             serverQueue.connection = connection;
-
-            setTimeout(async function() {
-
-                if (!serverQueue.songs[0]) return;
-
-                await play(serverQueue.songs[0], serverQueue, false);
-
-                serverQueue.player.on("error", async (error) => {
-
-                    const idleFunction = serverQueue.player.listeners(voice.AudioPlayerStatus.Idle)[0];
-                    serverQueue.player.removeListener(voice.AudioPlayerStatus.Idle, idleFunction);
-
-                    let errorCode = Math.floor(Math.random()*1000);
-                    const errorHeader = `--------- Internal error code: 20-${errorCode} ---------`;
-                    console.log(new Date().toLocaleString('es-ES'))
-                    console.log(errorHeader);
-                    console.error(error);
-
-                    const writeStream = fs.createWriteStream(path.join(
-                        __dirname,
-                        "..",
-                        "logs",
-                        `${new Date().toISOString()}.log`
-                    ));
-
-                    writeStream.write(`${errorHeader}\n\n${error.stack}\n\n${error.info}\n\n${guild}\n\n${serverQueue}`);
-
-                    writeStream.on('error', (err) => {
-                        console.error(err)
-                    });
-
-                    writeStream.end();
-
-                    if (error.message.includes('403')) { // Temporary solution to random 403 errors from ytdl-core bug
-
-                        await play(error.resource.metadata, serverQueue, true);
-                    } 
-                    
-                    if (error.message.includes('410')) { // Temporary inform message about restricted or sensitive videos
- 
-                        message.channel.send(strings[guild.language].botCouldNotPlayFlaggedSong.replace('%ERRORCODE%', errorCode));
-                        return idleFunction();
-                    }
-                    
-                    if (!error.message.includes('403') && !error.message.includes('410')) {
-
-                        message.channel.send(strings[guild.language].botCouldNotPlaySong.replace('%ERRORCODE%', errorCode));
-                        return idleFunction();
-                    }
-                });
-            }, 3000);
 
         } catch (err) {
 
@@ -179,6 +128,54 @@ module.exports.run = async (client, message, args, guild) => {
 
             return message.channel.send(strings[guild.language].botCouldNotConnect);
         }
+
+        if (!serverQueue.songs[0]) return;
+
+        await play(serverQueue.songs[0], serverQueue, false);
+
+        serverQueue.player.on("error", async (error) => {
+
+            const idleFunction = serverQueue.player.listeners(voice.AudioPlayerStatus.Idle)[0];
+            serverQueue.player.removeListener(voice.AudioPlayerStatus.Idle, idleFunction);
+
+            let errorCode = Math.floor(Math.random()*1000);
+            const errorHeader = `--------- Internal error code: 20-${errorCode} ---------`;
+            console.log(new Date().toLocaleString('es-ES'))
+            console.log(errorHeader);
+            console.error(error);
+
+            const writeStream = fs.createWriteStream(path.join(
+                __dirname,
+                "..",
+                "logs",
+                `${new Date().toISOString()}.log`
+            ));
+
+            writeStream.write(`${errorHeader}\n\n${error.stack}\n\n${error.info}\n\n${guild}\n\n${serverQueue}`);
+
+            writeStream.on('error', (err) => {
+                console.error(err)
+            });
+
+            writeStream.end();
+
+            if (error.message.includes('403')) { // Temporary solution to random 403 errors from ytdl-core bug
+
+                await play(error.resource.metadata, serverQueue, true);
+            } 
+            
+            if (error.message.includes('410')) { // Temporary inform message about restricted or sensitive videos
+
+                message.channel.send(strings[guild.language].botCouldNotPlayFlaggedSong.replace('%ERRORCODE%', errorCode));
+                return idleFunction();
+            }
+            
+            if (!error.message.includes('403') && !error.message.includes('410')) {
+
+                message.channel.send(strings[guild.language].botCouldNotPlaySong.replace('%ERRORCODE%', errorCode));
+                return idleFunction();
+            }
+        });
     }
 
     async function preQueue(args, message) {
@@ -508,7 +505,9 @@ module.exports.run = async (client, message, args, guild) => {
     
         queue.player.once(voice.AudioPlayerStatus.Idle, () => {
 
-            queue.playingEmbed.delete();
+            if (!queue.playingEmbed.deleted) {
+                queue.playingEmbed.delete();
+            }
 
             if (queue.loop) {
 
