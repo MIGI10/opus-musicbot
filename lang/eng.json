@@ -50,7 +50,7 @@
     "loopEnabled": "Loop mode has been enabled for **%SONGNAME%** [%SONGDURATION%], remember that using `skip` or `forceskip` will play the song again, to disable execute the command again.",
     "userMustSpecifySong": "You must specify a song name",
     "noLyricsFound": "Unable to find lyrics for: **%SONGNAME%**",
-    "userMustSpecifySongPositionToMove": "You must specify correctly the number of the song that you wish to move and the desired position, use `%PREFIX%queue` to see the queue and the n of the songs.",
+    "userMustSpecifySongPositionToMove": "You must specify correctly the number of the song that you wish to move and the desired position, use `%PREFIX%queue` to see the queue and the numbering of the songs.",
     "notEnoughSongsToMove": "Not enough songs on the queue to move.",
     "numDoesNotCorrespondToSong": "The number (%SONGNUM%) does not correspond to any song, use `%PREFIX%queue` to view the queue and the positioning of the songs.",
     "numDoesNotCorrespondToPos": "The number (%POSNUM%) does not correspond to any song on the queue, use `%PREFIX%queue` to view the queue and the numbering of the songs",
