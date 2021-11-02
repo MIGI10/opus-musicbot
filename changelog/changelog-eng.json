@@ -15,7 +15,9 @@
         ],
         "2.1 - 01/11/21": [
             "New command `lyrics`, shows lyrics of currently playing or specified song",
-            "Language can be changed now with `config`, available languages: Spanish and English"
+            "Language can be changed now with `config`, available languages: Spanish and English",
+            "Bot now starts playing imediately after connecting with no delay",
+            "Reactions added on `skip` and `forceskip` use to confirm action"
         ]
     }
 }

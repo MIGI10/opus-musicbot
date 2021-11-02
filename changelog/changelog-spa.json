@@ -15,7 +15,9 @@
         ],
         "2.1 - 01/11/21": [
             "Nuevo comando `lyrics`, muestra el lyrics de la canción que suena o de una canción proporcionada",
-            "Ahora el idioma del bot se puede cambiar con `config`, idiomas disponibles: Español y Inglés"
+            "Ahora el idioma del bot se puede cambiar con `config`, idiomas disponibles: Español y Inglés",
+            "Ahora el bot empieza a reproducir inmediatamente tras conectarse al canal de voz",
+            "Se han añadido reacciones tras usar `skip` o `forceskip` para confirmar la acción"
         ]
     }
 }
