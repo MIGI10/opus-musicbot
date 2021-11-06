@@ -38,7 +38,7 @@ module.exports.run = async (client, message, args, guild) => {
         }
 
         if (message.channel !== serverQueue.textChannel) {
-            return message.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id).replace('%PREFIX', client.prefix));
+            return message.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id).replace('%PREFIX%', client.prefix));
         }
 
         if (!serverQueue.playing) {
