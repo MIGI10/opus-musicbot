@@ -8,7 +8,7 @@ module.exports.run = (client, message, args, guild) => {
         const usage = strings[guild.language][`${cmd.info.name}HelpUsage`];
     
         const commandEmbed = new client.discordjs.MessageEmbed()
-            .setTitle(`Help | Command`)
+            .setTitle(`Command | Opus Music Bot`)
             .setDescription(strings[guild.language].helpCommandHelp.replace('%NAME%', cmd.info.name).replace('%DESC%', description).replace('%USAGE%', usage).replace('%ALIAS%', cmd.info.alias))
             .setColor(65453)
             .setFooter(`Opus Music Bot v${client.config.version} · ${strings[guild.language].botDevelopedBy}`, client.user.displayAvatarURL({dynamic: true, size: 1024}))
