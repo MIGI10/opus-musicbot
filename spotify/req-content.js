@@ -13,11 +13,11 @@ module.exports.run = async (client, message, args, guild) => {
 
     const urlArray = args.split('/');
 
+    let songs = []
+
     if (urlArray[3] == 'playlist' && urlArray[4]) {
          
         const spotifyId = urlArray[4].split('?')[0];
-
-        let songs = []
 
         var response = await getPlaylist(spotifyId);
         var query = await response.json();
@@ -42,8 +42,10 @@ module.exports.run = async (client, message, args, guild) => {
             }
 
             for (let i = query.items.length - 1; i >= 0; i--) {
-                const songName = query.items[i].track.name + ' ' + query.items[i].track.artists[0].name;
-                songs.push(songName);
+                if (query.items[i].track) {
+                    const songName = query.items[i].track.name + ' ' + query.items[i].track.artists[0].name;
+                    songs.push(songName);
+                }
             }
                 
         } else {
@@ -53,8 +55,10 @@ module.exports.run = async (client, message, args, guild) => {
             }
 
             for (const item of query.items) {
-                const songName = item.track.name + ' ' + item.track.artists[0].name;
-                songs.push(songName);
+                if (item.track) {
+                    const songName = item.track.name + ' ' + item.track.artists[0].name;
+                    songs.push(songName);
+                }
             }
         }
 
@@ -68,8 +72,6 @@ module.exports.run = async (client, message, args, guild) => {
     } else if (urlArray[3] == 'track' && urlArray[4]) {
 
         const spotifyId = urlArray[4].split('?')[0];
-
-        let songs = []
 
         var response = await getTrack(spotifyId);
         var query = await response.json();
@@ -92,8 +94,6 @@ module.exports.run = async (client, message, args, guild) => {
 
         const spotifyId = urlArray[4].split('?')[0];
 
-        let songs = []
-
         var response = await getAlbum(spotifyId);
         var query = await response.json();
     
@@ -113,8 +113,10 @@ module.exports.run = async (client, message, args, guild) => {
             }
 
             for (let i = query.items.length - 1; i >= 0; i--) {
-                const songName = query.items[i].name + ' ' + query.items[i].artists[0].name;
-                songs.push(songName);
+                if (query.items[i]) {
+                    const songName = query.items[i].name + ' ' + query.items[i].artists[0].name;
+                    songs.push(songName);
+                }
             }
                 
         } else {
@@ -124,14 +126,23 @@ module.exports.run = async (client, message, args, guild) => {
             }
 
             for (const item of query.items) {
-                const songName = item.name + ' ' + item.artists[0].name;
-                songs.push(songName);
+                if (item) {
+                    const songName = item.name + ' ' + item.artists[0].name;
+                    songs.push(songName);
+                }
             }
         }
 
         songs.total = query.total;
         songs.type = 'album';
         songs.offset = offset;
+
+        return songs;
+
+    } else if (urlArray[3] == 'episode' || urlArray[3] == 'show') {
+
+        message.channel.send(strings[guild.language].podcastsNotCompatible);
+        songs.type = null;
 
         return songs;
     }

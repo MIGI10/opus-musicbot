@@ -49,7 +49,15 @@ module.exports.run = async (client, message, args, guild) => {
                     clearTimeout(serverQueue.inactivity);
                     serverQueue.inactivity = null;
 
-                    await preQueue(args, message);
+                    await preQueue(args, message)
+                        .catch(err => {
+                            let errorCode = Math.floor(Math.random()*1000);
+                            const errorHeader = `--------- Internal error code: 10-${errorCode} ---------`;
+                            console.log(new Date().toLocaleString('es-ES'))
+                            console.log(errorHeader);
+                            console.error(err);
+                            return message.channel.send(strings[guild.language].botCouldNotQueue.replace('%ERRORCODE%', errorCode));
+                        });
                     await play(serverQueue.songs[0], serverQueue, false);
 
                     return;
@@ -68,7 +76,15 @@ module.exports.run = async (client, message, args, guild) => {
             if (!args[0]) {
                 return message.reply(strings[guild.language].userMustSpecifySongToQueue);
             } else {
-                return preQueue(args, message);
+                return preQueue(args, message)
+                    .catch(err => {
+                        let errorCode = Math.floor(Math.random()*1000);
+                        const errorHeader = `--------- Internal error code: 10-${errorCode} ---------`;
+                        console.log(new Date().toLocaleString('es-ES'))
+                        console.log(errorHeader);
+                        console.error(err);
+                        return message.channel.send(strings[guild.language].botCouldNotQueue.replace('%ERRORCODE%', errorCode));
+                    });
             }
         }
     } else {
@@ -91,7 +107,15 @@ module.exports.run = async (client, message, args, guild) => {
             return message.channel.send(strings[guild.language].botNeedsPermsToConnect);
         }
 
-        await preQueue(args, message);
+        await preQueue(args, message)
+            .catch(err => {
+                let errorCode = Math.floor(Math.random()*1000);
+                const errorHeader = `--------- Internal error code: 10-${errorCode} ---------`;
+                console.log(new Date().toLocaleString('es-ES'))
+                console.log(errorHeader);
+                console.error(err);
+                return message.channel.send(strings[guild.language].botCouldNotQueue.replace('%ERRORCODE%', errorCode));
+            });
 
         try {
             var connection = voice.joinVoiceChannel({
@@ -207,7 +231,15 @@ module.exports.run = async (client, message, args, guild) => {
             
             if (argsJoined.includes('open.spotify.com/')) {
 
-                const songs = await spotifyReq.run(client, message, args, guild);
+                const songs = await spotifyReq.run(client, message, args, guild)
+                    .catch(err => {
+                        let errorCode = Math.floor(Math.random()*1000);
+                        const errorHeader = `--------- Internal error code: 15-${errorCode} ---------`;
+                        console.log(new Date().toLocaleString('es-ES'))
+                        console.log(errorHeader);
+                        console.error(err);
+                        return message.channel.send(strings[guild.language].botCouldNotQueueSpotify.replace('%ERRORCODE%', errorCode));
+                    });
 
                 if (!songs.type) return;
 
@@ -441,8 +473,6 @@ module.exports.run = async (client, message, args, guild) => {
     }
 
     async function play(song, queue, error) {
-
-        queue.playing = true
     
         if (!queue.player) {
     
@@ -485,9 +515,11 @@ module.exports.run = async (client, message, args, guild) => {
     
         const dispatcher = queue.connection
             .subscribe(queue.player)
-    
+
         song.timeAtPlay = Date.now();
         song.pauseTimestamps = [];
+
+        queue.playing = true;
 
         if (!error) {
 
