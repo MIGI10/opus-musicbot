@@ -25,17 +25,17 @@ module.exports.run = (client, message, args, guild) => {
     }
 
     if (songNum >= serverQueue.songs.length || songNum == 0) {
-        return message.reply(strings[guild.language].numDoesNotCorrespondToSong.replace('%PREFIX%', client.prefix))
+        return message.reply(strings[guild.language].numDoesNotCorrespondToSong.replace('%SONGNUM%', songNum).replace('%PREFIX%', client.prefix))
     }
 
-    serverQueue.songs.splice(songNum, 1);
-
     message.channel.send(`**${serverQueue.songs[songNum].title}** ${strings[guild.language].songRemoved}`)
+
+    serverQueue.songs.splice(songNum, 1);
 }
 
 module.exports.info = {
     name: "remove",
-    alias: "rem"
+    alias: "rm"
 }
 
 module.exports.requirements = {
