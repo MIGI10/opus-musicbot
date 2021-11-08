@@ -208,7 +208,8 @@ module.exports.run = async (client, message, args, guild) => {
             return message.reply(strings[guild.language].botIsUpdating)
                         .then(msg => setTimeout(() => { 
                             msg.delete(); 
-                            message.delete() 
+                            message.delete()
+                            .catch((err) => null);
                         }, 5000))
         }
 
@@ -537,9 +538,11 @@ module.exports.run = async (client, message, args, guild) => {
     
         queue.player.once(voice.AudioPlayerStatus.Idle, () => {
 
-            if (!queue.playingEmbed.deleted) {
-                queue.playingEmbed.delete();
-            }
+            queue.playingEmbed.fetch()
+            .then((msg) => {
+                msg.delete();
+            })
+            .catch((err) => null);
 
             if (queue.loop) {
 

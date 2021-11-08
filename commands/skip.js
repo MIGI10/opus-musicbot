@@ -27,14 +27,18 @@ module.exports.run = async (client, message, args, guild) => {
         return message.reply(strings[guild.language].botIsUpdating2)
             .then(msg => setTimeout(() => { 
                 msg.delete(); 
-                message.delete() 
+                message.delete()
+                .catch((err) => null);
             }, 5000))
     }
 
     const nowPlaying = serverQueue.songs[0];
 
     if (message.member.roles.cache.has(guild.modRoleId) || message.author.id == nowPlaying.requesterId) {
-        message.react('👌');
+
+        message.react('👌')
+        .catch((err) => null);
+
         serverQueue.player.stop(true);
         return;
     }
@@ -43,7 +47,9 @@ module.exports.run = async (client, message, args, guild) => {
 
     if (usersConnected <= 2) {
 
-        message.react('👌');
+        message.react('👌')
+        .catch((err) => null);
+
         serverQueue.player.stop(true);
 
     } else {
@@ -61,7 +67,9 @@ module.exports.run = async (client, message, args, guild) => {
         .then(async collected => {
             if (collected.size == ((Math.ceil(usersConnected*0.5))-1)) {
 
-                message.react('👌');
+                message.react('👌')
+                .catch((err) => null);
+
                 serverQueue.player.stop(true);
             }
         })

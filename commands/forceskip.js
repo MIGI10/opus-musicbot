@@ -27,7 +27,8 @@ module.exports.run = async (client, message, args, guild) => {
         return message.reply(strings[guild.language].botIsUpdating2)
             .then(msg => setTimeout(() => { 
                 msg.delete(); 
-                message.delete() 
+                message.delete()
+                .catch((err) => null);
             }, 5000))
     }
 
@@ -37,7 +38,8 @@ module.exports.run = async (client, message, args, guild) => {
         return message.reply(strings[guild.language].forceskipNotAllowed.replace('%PREFIX%', client.prefix).replace('%REQUESTER%', nowPlaying.requesterUsertag));
     }
 
-    message.react('👌');
+    message.react('👌')
+    .catch((err) => null);
     
     serverQueue.player.stop(true);
 }
