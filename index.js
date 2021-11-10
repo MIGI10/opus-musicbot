@@ -79,6 +79,6 @@ process.on('unhandledRejection', error => {
 client.on('warn', (warn) => console.warn('[EVENT - WARN]' + warn));
 client.on('error', (error) => console.error('[EVENT - ERROR]' + error));
 client.on('invalidated', () => console.fatal('[EVENT] Session invalidated!'));
-client.on('rateLimit', (info) => console.warn(`[EVENT] Ratelimit hit, ${info.timeout}ms delay`));
+client.on('rateLimit', (info) => console.warn(`[EVENT] Ratelimit hit, ${info.timeout}ms delay\n${JSON.stringify(info)}`));
 
 client.login(config.botToken);
