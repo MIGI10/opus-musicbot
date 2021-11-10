@@ -153,8 +153,6 @@ module.exports.run = async (client, message, args, guild) => {
             return message.channel.send(strings[guild.language].botCouldNotConnect);
         }
 
-        if (!serverQueue.songs[0]) return;
-
         await play(serverQueue.songs[0], serverQueue, false);
 
         serverQueue.player.on("error", async (error) => {
@@ -474,6 +472,8 @@ module.exports.run = async (client, message, args, guild) => {
     }
 
     async function play(song, queue, error) {
+
+        if (!song) return;
     
         if (!queue.player) {
     
@@ -538,11 +538,8 @@ module.exports.run = async (client, message, args, guild) => {
     
         queue.player.once(voice.AudioPlayerStatus.Idle, () => {
 
-            queue.playingEmbed.fetch()
-            .then((msg) => {
-                msg.delete();
-            })
-            .catch((err) => null);
+            queue.playingEmbed.delete()
+            .catch(err => null);
 
             if (queue.loop) {
 
