@@ -389,7 +389,7 @@ module.exports.run = async (client, message, args, guild) => {
         let i = 0;
         video = videoList.items[0];
 
-        while (!videoList.items[i] || videoList.items[i].type !== 'video' || videoList.items[i].isLive) {
+        while (!videoList.items[i] || videoList.items[i].type !== 'video' || videoList.items[i].isLive || !videoList.items[i].length.simpleText) {
             video = videoList.items[i + 1];
             i++;
 
