@@ -28,6 +28,9 @@ strings['spa'] = spaStrings;
 
 global.strings = strings;
 
+const logError = require('./helpers/logError');
+global.logError = logError;
+
 client.prefix = config.prefix;
 client.config = config;
 client.db = db;

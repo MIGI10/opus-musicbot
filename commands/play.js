@@ -28,6 +28,7 @@ module.exports.run = async (client, message, args, guild) => {
     const serverQueue = client.queue.get(message.guild.id);
 
     if (!message.member.voice.channel && !serverQueue.voiceChannel) {
+        client.queue.delete(message.guild.id);
         return message.reply(strings[guild.language].userNotConnectedToVoice)
     }
 
@@ -51,14 +52,13 @@ module.exports.run = async (client, message, args, guild) => {
 
                     await preQueue(args, message)
                         .catch(err => {
-                            let errorCode = Math.floor(Math.random()*1000);
-                            const errorHeader = `--------- Internal error code: 10-${errorCode} ---------`;
-                            console.log(new Date().toLocaleString('es-ES'))
-                            console.log(errorHeader);
-                            console.error(err);
+                            let errorCode = logError(err, '10', message, guild, serverQueue);
                             return message.channel.send(strings[guild.language].botCouldNotQueue.replace('%ERRORCODE%', errorCode));
                         });
-                    await play(serverQueue.songs[0], serverQueue, false);
+                    await play(serverQueue.songs[0], serverQueue, false)
+                        .catch(err => {
+                            logError(err, '30', message, guild, serverQueue);
+                        });
 
                     return;
                 }
@@ -78,11 +78,7 @@ module.exports.run = async (client, message, args, guild) => {
             } else {
                 return preQueue(args, message)
                     .catch(err => {
-                        let errorCode = Math.floor(Math.random()*1000);
-                        const errorHeader = `--------- Internal error code: 10-${errorCode} ---------`;
-                        console.log(new Date().toLocaleString('es-ES'))
-                        console.log(errorHeader);
-                        console.error(err);
+                        let errorCode = logError(err, '10', message, guild, serverQueue);
                         return message.channel.send(strings[guild.language].botCouldNotQueue.replace('%ERRORCODE%', errorCode));
                     });
             }
@@ -90,6 +86,7 @@ module.exports.run = async (client, message, args, guild) => {
     } else {
 
         if (!args[0]) {
+            client.queue.delete(message.guild.id);
             return message.reply(strings[guild.language].userMustSpecifySongToStartPlayer)
         }
 
@@ -109,11 +106,7 @@ module.exports.run = async (client, message, args, guild) => {
 
         await preQueue(args, message)
             .catch(err => {
-                let errorCode = Math.floor(Math.random()*1000);
-                const errorHeader = `--------- Internal error code: 10-${errorCode} ---------`;
-                console.log(new Date().toLocaleString('es-ES'))
-                console.log(errorHeader);
-                console.error(err);
+                let errorCode = logError(err, '10', message, guild, serverQueue);
                 return message.channel.send(strings[guild.language].botCouldNotQueue.replace('%ERRORCODE%', errorCode));
             });
 
@@ -129,61 +122,30 @@ module.exports.run = async (client, message, args, guild) => {
         } catch (err) {
 
             client.queue.delete(message.guild.id);
-            let errorCode = Math.floor(Math.random()*1000);
-            const errorHeader = `--------- Internal error code: 30-${errorCode} ---------`;
-            console.log(new Date().toLocaleString('es-ES'))
-            console.log(errorHeader);
-            console.error(err);
 
-            const writeStream = fs.createWriteStream(path.join(
-                __dirname,
-                "..",
-                "logs",
-                `${new Date().toISOString()}.log`
-            ));
+            let errorCode = logError(err, '20', message, guild, serverQueue);
 
-            writeStream.write(`${errorHeader}\n\n${error.stack}\n\n${guild}\n\n${serverQueue}`);
-
-            writeStream.on('error', (err) => {
-                console.error(err)
-            });
-
-            writeStream.end();
-
-            return message.channel.send(strings[guild.language].botCouldNotConnect);
+            return message.channel.send(strings[guild.language].botCouldNotConnect).replace('%ERRORCODE%', errorCode);
         }
 
-        await play(serverQueue.songs[0], serverQueue, false);
+        await play(serverQueue.songs[0], serverQueue, false)
+            .catch(err => {
+                logError(err, '30', message, guild, serverQueue);
+            });
 
         serverQueue.player.on("error", async (error) => {
 
             const idleFunction = serverQueue.player.listeners(voice.AudioPlayerStatus.Idle)[0];
             serverQueue.player.removeListener(voice.AudioPlayerStatus.Idle, idleFunction);
 
-            let errorCode = Math.floor(Math.random()*1000);
-            const errorHeader = `--------- Internal error code: 20-${errorCode} ---------`;
-            console.log(new Date().toLocaleString('es-ES'))
-            console.log(errorHeader);
-            console.error(error);
-
-            const writeStream = fs.createWriteStream(path.join(
-                __dirname,
-                "..",
-                "logs",
-                `${new Date().toISOString()}.log`
-            ));
-
-            writeStream.write(`${errorHeader}\n\n${error.stack}\n\n${error.info}\n\n${guild}\n\n${serverQueue}`);
-
-            writeStream.on('error', (err) => {
-                console.error(err)
-            });
-
-            writeStream.end();
+            let errorCode = await logError(error, '40', null, guild, serverQueue);
 
             if (error.message.includes('403')) { // Temporary solution to random 403 errors from ytdl-core bug
 
-                await play(error.resource.metadata, serverQueue, true);
+                await play(error.resource.metadata, serverQueue, true)
+                    .catch(err => {
+                        logError(err, '30', null, guild, serverQueue);
+                    });
             } 
             
             if (error.message.includes('410')) { // Temporary inform message about restricted or sensitive videos
@@ -232,11 +194,7 @@ module.exports.run = async (client, message, args, guild) => {
 
                 const songs = await spotifyReq.run(client, message, args, guild)
                     .catch(err => {
-                        let errorCode = Math.floor(Math.random()*1000);
-                        const errorHeader = `--------- Internal error code: 15-${errorCode} ---------`;
-                        console.log(new Date().toLocaleString('es-ES'))
-                        console.log(errorHeader);
-                        console.error(err);
+                        let errorCode = logError(err, '15', message, guild, serverQueue);
                         return message.channel.send(strings[guild.language].botCouldNotQueueSpotify.replace('%ERRORCODE%', errorCode));
                     });
 
