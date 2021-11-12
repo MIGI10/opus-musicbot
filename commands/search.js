@@ -25,23 +25,31 @@ module.exports.run = async (client, message, args, guild) => {
         console.error(err)
     });
 
+    writeStream.end();
+
     let embedList = '';
 
-    writeStream.end();
+    let j = 0;
 
     for (let i = 1; i <= 6; i++) {
 
-        j = i - 1;
+        firstCheck = j;
 
-        if (!videoList.items[j]) {
-            j = i;
-        } else if (videoList.items[j].type !== 'video') {
-            j = i;
-        } else if (videoList.items[j].isLive) {
-            j = i;
+        while (!videoList.items[j] || videoList.items[j].type !== 'video' || videoList.items[j].isLive || !videoList.items[j].length.simpleText) {
+            j++;
+
+            if (j >= (firstCheck + 10)) {
+                break;
+            }
         }
 
-        embedList = embedList.concat(`**${i}.** [${videoList.items[j].title.replaceAll(`||`, `\\||`)}](https://www.youtube.com/watch?v=${videoList.items[j].id}) [${videoList.items[j].length.simpleText}]\nID: \`${videoList.items[j].id}\`\n\n`)
+        if (j >= (firstCheck + 10)) {
+            break;
+        }
+
+        embedList = embedList.concat(`**${i}.** [${videoList.items[j].title.replaceAll(`||`, `\\||`)}](https://www.youtube.com/watch?v=${videoList.items[j].id}) [${videoList.items[j].length.simpleText}]\nID: \`${videoList.items[j].id}\`\n\n`);
+        
+        j++;
     }
 
     const videoListEmbed = new client.discordjs.MessageEmbed()
