@@ -449,8 +449,15 @@ module.exports.run = async (client, message, args, guild) => {
             const option = {
                 filter: "audioonly",
                 highWaterMark: 1 << 25,
+                requestOptions: {
+                    headers: {
+                      cookie: client.config.youtubeCookie,
+                      'x-youtube-identity-token': client.config.identityToken,
+                    }
+                }
             };
-            const stream = await ytdl(song.url, option);
+
+            const stream = await ytdl(`${song.url}&bpctr=99999999999999`, option); // Parameter to bypass sensitive content alert
     
             var resource = voice.createAudioResource(stream, {
                 metadata: song
