@@ -1,12 +1,12 @@
 module.exports = async (client, oldState, newState) => {
+
+    const serverQueue = client.queue.get(oldState.guild.id);
     
-    if (!client.queue.get(oldState.guild.id) || !client.queue.get(oldState.guild.id).connection) return;
+    if (!serverQueue || !serverQueue.voiceChannel) return;
 
     const guild = await client.db.guild.findOne({ 
         id: oldState.guild.id,
     }).catch(err => console.log(err));
-
-    const serverQueue = client.queue.get(oldState.guild.id);
 
     if (serverQueue.voiceChannel === oldState.channel) {
 
@@ -14,11 +14,13 @@ module.exports = async (client, oldState, newState) => {
 
             if (serverQueue.voiceChannel.members.size == 1 && oldState.id !== client.user.id) {
 
+                clearTimeout(serverQueue.inactivity);
+
                 serverQueue.inactivity = setTimeout(() => {
 
                     serverQueue.textChannel.send(strings[guild.language].botLeftAlone);
 
-                    if (serverQueue.connection._state.status != 'destroyed') {
+                    if (serverQueue.connection && serverQueue.connection._state.status != 'destroyed') {
                         serverQueue.connection.destroy();
                     }
 
