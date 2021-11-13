@@ -541,7 +541,7 @@ module.exports.run = async (client, message, args, guild) => {
                 } else {
 
                     queue.playing = false;
-                    queue.player.stop();
+                    queue.player.stop(true);
                     queue.textChannel.send(strings[guild.language].botPlayerStoppedNoSongs)
 
                     queue.inactivity = setTimeout(() => {

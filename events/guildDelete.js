@@ -6,7 +6,7 @@ module.exports = async (client, guild) => {
 
         if (serverQueue.player && serverQueue.player.state.status != 'idle') {
             serverQueue.playing = false;
-            serverQueue.player.stop();
+            serverQueue.player.stop(true);
         }
 
         client.queue.delete(guild.id);

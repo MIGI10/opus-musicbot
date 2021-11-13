@@ -57,7 +57,7 @@ module.exports.run = async (client, message, args, guild) => {
         serverQueue.loop = false;
         serverQueue.shuffle = false;
         serverQueue.songs = [];
-        serverQueue.player.stop();
+        serverQueue.player.stop(true);
 
         message.channel.send(strings[guild.language].clearComplete);
 

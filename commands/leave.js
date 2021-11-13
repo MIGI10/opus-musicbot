@@ -19,7 +19,7 @@ module.exports.run = (client, message, args, guild) => {
     clearTimeout(serverQueue.inactivity);
 
     serverQueue.playing = false;
-    serverQueue.player.stop();
+    serverQueue.player.stop(true);
     
     serverQueue.connection.destroy();
 
