@@ -18,6 +18,9 @@ module.exports = async (client, oldState, newState) => {
 
                     serverQueue.textChannel.send(strings[guild.language].botLeftAlone);
 
+                    serverQueue.playing = false;
+                    serverQueue.player.stop();
+
                     if (serverQueue.connection._state.status != 'destroyed') {
                         serverQueue.connection.destroy();
                     }
@@ -33,7 +36,12 @@ module.exports = async (client, oldState, newState) => {
             if (!newState.channel) {
                 
                 clearTimeout(serverQueue.inactivity);
+
+                serverQueue.playing = false;
+                serverQueue.player.stop();
+                
                 client.queue.delete(oldState.guild.id);
+
                 serverQueue.textChannel.send(strings[guild.language].botHasBeenDisconnected);
 
             } else {
@@ -49,6 +57,9 @@ module.exports = async (client, oldState, newState) => {
                     serverQueue.inactivity = setTimeout(() => {
 
                         serverQueue.textChannel.send(strings[guild.language].botLeftAlone);
+
+                        serverQueue.playing = false;
+                        serverQueue.player.stop();
 
                         if (serverQueue.connection._state.status != 'destroyed') {
                             serverQueue.connection.destroy();

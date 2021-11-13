@@ -53,8 +53,6 @@ module.exports.run = async (client, message, args, guild) => {
 
     async function clear() {
 
-        serverQueue.playingEmbed.delete();
-
         serverQueue.playing = false;
         serverQueue.loop = false;
         serverQueue.shuffle = false;
