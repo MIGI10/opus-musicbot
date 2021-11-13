@@ -1,5 +1,17 @@
 module.exports = async (client, guild) => {
 
+    const serverQueue = client.queue.get(guild.id);
+
+    if (serverQueue) {
+
+        if (serverQueue.player && serverQueue.player.state.status != 'idle') {
+            serverQueue.playing = false;
+            serverQueue.player.stop();
+        }
+
+        client.queue.delete(guild.id);
+    }
+
     const guildSaved = await client.db.guild.findOne({ 
         id: guild.id,
     }).catch(err => console.log(err));

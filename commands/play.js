@@ -506,6 +506,8 @@ module.exports.run = async (client, message, args, guild) => {
             queue.playingEmbed.delete()
             .catch(err => null);
 
+            if (!queue.playing) return;
+
             if (queue.loop) {
 
                 return play(queue.songs[0], queue, false);
@@ -537,27 +539,24 @@ module.exports.run = async (client, message, args, guild) => {
                     }
                 
                 } else {
-        
-                    if (queue.playing) {
 
-                        queue.playing = false;
-                        queue.player.stop();
-                        queue.textChannel.send(strings[guild.language].botPlayerStoppedNoSongs)
+                    queue.playing = false;
+                    queue.player.stop();
+                    queue.textChannel.send(strings[guild.language].botPlayerStoppedNoSongs)
 
-                        queue.inactivity = setTimeout(() => {
+                    queue.inactivity = setTimeout(() => {
 
-                            if (!queue.playing && !queue.songs[0]) {
+                        if (!queue.playing && !queue.songs[0]) {
 
-                                client.queue.delete(queue.textChannel.guild.id);
-                                queue.textChannel.send(strings[guild.language].botInactiveForAMinute)
-                                
-                                if (serverQueue.connection._state.status != 'destroyed') {
-                                    serverQueue.connection.destroy();
-                                }
+                            client.queue.delete(queue.textChannel.guild.id);
+                            queue.textChannel.send(strings[guild.language].botInactiveForAMinute)
+                            
+                            if (serverQueue.connection._state.status != 'destroyed') {
+                                serverQueue.connection.destroy();
                             }
+                        }
 
-                        }, 90 * 1000);
-                    }
+                    }, 90 * 1000);
                 }
             }
         });

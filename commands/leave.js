@@ -16,12 +16,11 @@ module.exports.run = (client, message, args, guild) => {
 
     serverQueue.textChannel.send(strings[guild.language].botLeftChannel.replace('%VOICECHANNEL%', serverQueue.voiceChannel.id));
 
-    if (serverQueue.playingEmbed) {
-        serverQueue.playingEmbed.delete();
-    }
-
     clearTimeout(serverQueue.inactivity);
 
+    serverQueue.playing = false;
+    serverQueue.player.stop();
+    
     serverQueue.connection.destroy();
 
     client.queue.delete(message.guild.id);
