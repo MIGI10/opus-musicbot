@@ -7,27 +7,35 @@ module.exports = async (client) => {
 
         const guilds = await client.db.guild.find();
 
+        let i = 1;
+
         for (const guild of guilds) {
 
-            const guildInfo = await client.guilds.fetch(guild.id);
+            setTimeout(async () => {
 
-            const owner = await guildInfo.fetchOwner();
+                const guildInfo = await client.guilds.fetch(guild.id);
 
-            guild.updateOne(
-                { $set: { 
-                    name: guildInfo.name,
-                    memberCount: guildInfo.memberCount,
-                    ownerId: guildInfo.ownerId,
-                    ownerTag: owner.user.tag,
-                    isPartnered: guildInfo.partnered,
-                    isVerified: guildInfo.verified,
-                    boostCount: guildInfo.premiumSubscriptionCount,
-                    description: guildInfo.description,
-                }}, (error) => {
-                if (error) console.log(error);
-            });
+                const owner = await guildInfo.fetchOwner();
 
-            await guild.save().catch(err => console.log(err));
+                guild.updateOne(
+                    { $set: {
+                        name: guildInfo.name,
+                        memberCount: guildInfo.memberCount,
+                        ownerId: guildInfo.ownerId,
+                        ownerTag: owner.user.tag,
+                        isPartnered: guildInfo.partnered,
+                        isVerified: guildInfo.verified,
+                        boostCount: guildInfo.premiumSubscriptionCount,
+                        description: guildInfo.description,
+                    }}, (error) => {
+                    if (error) console.log(error);
+                });
+
+                await guild.save().catch(err => console.log(err));
+
+            }, i * 3000);
+
+            i++;
         }
     }
 }

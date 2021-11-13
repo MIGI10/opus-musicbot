@@ -1,6 +1,5 @@
 module.exports = async (client) => {
 
-    setTimeout(updateCounters, 20*1000);
     setInterval(updateCounters, 14400*1000); // every 4h
 
     async function updateCounters() {
@@ -16,15 +15,23 @@ module.exports = async (client) => {
 
         const guilds = await client.guilds.fetch();
 
-        guilds.forEach((guild) => {
-            guild.fetch().then((g) => {
-                memberCount += g.memberCount;
-            })
-        })
+        let i = 1;
 
-        setTimeout(() => {
-            serversChannel.setName(serversChannelName.replace(/[0-9]+/g, guilds.size));
-            membersChannel.setName(membersChannelName.replace(/[0-9]+/g, memberCount));
-        }, 5000);
+        guilds.forEach((guild) => {
+            setTimeout(() => {
+                guild.fetch().then((g) => {
+                    memberCount += g.memberCount;
+                })
+            }, i * 3000);
+
+            if (i >= guilds.size) {
+                setTimeout(() => {
+                    serversChannel.setName(serversChannelName.replace(/[0-9]+/g, guilds.size));
+                    membersChannel.setName(membersChannelName.replace(/[0-9]+/g, memberCount));
+                }, i * 3000);
+            }
+
+            i++
+        })
     }
 }
