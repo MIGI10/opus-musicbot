@@ -73,8 +73,12 @@ const guild = db.model("guild", guildSchema);
 
 db.guild = guild;
 
-process.on('unhandledRejection', error => {
-	console.error('[EVENT] Unhandled promise rejection:', error);
+process.on('unhandledRejection', (reason, promise) => {
+	console.error('[EVENT] Unhandled promise rejection at:', promise, 'Reason:', reason);
+});
+
+process.on('uncaughtException', (error, origin) => {
+	console.error('[EVENT] Uncaught exception at:', origin, 'Error:', error);
 });
 
 client.on('warn', (warn) => console.warn('[EVENT - WARN]' + warn));
