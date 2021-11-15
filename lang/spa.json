@@ -73,6 +73,7 @@
     "botDevelopedBy": "Desarrollado por migi28#7731",
     "botLatency": "Latencia",
     "playlistPrivate": "¡Esa playlist no se puede cargar por ser privada!",
+    "playlistNotFound": "No se ha encontrado ninguna playlist que corresponda a ese link, asegúrate de que el link es válido y que la playlist no es privada",
     "playlistOffsetReverse": "Se ha solicitado que se empiece por la canción %OFFSET% y que posteriormente se añadan de forma invertida",
     "playlistReverse": "Se ha solicitado que las canciones se añadan de forma invertida",
     "playlistOffset": "Se ha solicitado que se empiece por la canción %OFFSET%",

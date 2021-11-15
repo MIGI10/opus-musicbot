@@ -430,8 +430,6 @@ module.exports.run = async (client, message, args, guild) => {
     }
 
     async function play(song, queue, error) {
-
-        if (!song) return;
     
         if (!queue.player) {
     
@@ -443,6 +441,8 @@ module.exports.run = async (client, message, args, guild) => {
     
             queue.player = player;
         }
+
+        if (!song) return;
 
         if (!error && song.durationSeconds < 600) { // Temporary solution to player aborted ytdl-core bug for long videos
 

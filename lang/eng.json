@@ -73,6 +73,7 @@
     "botDevelopedBy": "Developed by migi28#7731",
     "botLatency": "Latency",
     "playlistPrivate": "This playlist is private and cannot be loaded!",
+    "playlistNotFound": "Unable to find the provided playlist, make sure the link is valid and that the playlist is not private",
     "playlistOffsetReverse": "It has been requested to start with song %OFFSET% and then adding them in reverse mode",
     "playlistReverse": "It has been requested to add songs in reverse mode",
     "playlistOffset": "It has been requested to start with song %OFFSET%",

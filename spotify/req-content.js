@@ -33,6 +33,10 @@ module.exports.run = async (client, message, args, guild) => {
             return message.reply(strings[guild.language].playlistPrivate)
         }
 
+        if (response.status == 404) {
+            return message.reply(strings[guild.language].playlistNotFound);
+        }
+
         if (args.includes('reverse')) {
 
             if (offset) {
