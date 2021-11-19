@@ -183,7 +183,7 @@ module.exports.run = async (client, message, args, guild) => {
             const newSong = serverQueue.songs[serverQueue.songs.length - 1];
 
             const queuedEmbed = new client.discordjs.MessageEmbed()
-            .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) ${strings[guild.language].songQueued}`)
+            .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) ${strings[guild.language].songQueued.replace('%POSNUM%', serverQueue.songs.length - 1)}`)
             .setColor(65453)
 
             message.channel.send({ embeds: [queuedEmbed]});
@@ -279,7 +279,7 @@ module.exports.run = async (client, message, args, guild) => {
                     const newSong = serverQueue.songs[serverQueue.songs.length - 1];
 
                     const queuedEmbed = new client.discordjs.MessageEmbed()
-                    .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) ${strings[guild.language].songQueued}`)
+                    .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) ${strings[guild.language].songQueued.replace('%POSNUM%', serverQueue.songs.length - 1)}`)
                     .setColor(65453)
         
                     message.channel.send({ embeds: [queuedEmbed]});
@@ -309,7 +309,7 @@ module.exports.run = async (client, message, args, guild) => {
                     const newSong = serverQueue.songs[serverQueue.songs.length - 1];
 
                     const queuedEmbed = new client.discordjs.MessageEmbed()
-                    .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) ${strings[guild.language].songQueued}`)
+                    .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) ${strings[guild.language].songQueued.replace('%POSNUM%', serverQueue.songs.length - 1)}`)
                     .setColor(65453)
         
                     message.channel.send({ embeds: [queuedEmbed]});

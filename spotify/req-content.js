@@ -37,6 +37,10 @@ module.exports.run = async (client, message, args, guild) => {
             return message.reply(strings[guild.language].playlistNotFound);
         }
 
+        if (offset > query.total) {
+            return message.reply(strings[guild.language].playlistInvalidOffset);
+        }
+
         if (args.includes('reverse')) {
 
             if (offset) {
@@ -87,6 +91,10 @@ module.exports.run = async (client, message, args, guild) => {
             query = await response.json();
         }
 
+        if (response.status == 404) {
+            return message.reply(strings[guild.language].spotifyNotFound);
+        }
+
         const songName = query.name + ' ' + query.artists[0].name;
         songs.push(songName);
 
@@ -106,6 +114,14 @@ module.exports.run = async (client, message, args, guild) => {
             await reqAuth.run(client);
             response = await getAlbum(spotifyId);
             query = await response.json();
+        }
+
+        if (response.status == 404) {
+            return message.reply(strings[guild.language].spotifyNotFound);
+        }
+
+        if (offset > query.total) {
+            return message.reply(strings[guild.language].playlistInvalidOffset);
         }
 
         if (args.includes('reverse')) {
