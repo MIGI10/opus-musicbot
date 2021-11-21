@@ -10,14 +10,14 @@ module.exports.run = async (client, message, args, guild) => {
     }
 
     args = args.join(' ');
-
     const urlArray = args.split('/');
 
-    let songs = []
+    let songs = [];
 
-    if (urlArray[3] == 'playlist' && urlArray[4]) {
-         
-        const spotifyId = urlArray[4].split('?')[0];
+    if (urlArray.includes('playlist')) {
+
+        const IdIndex = urlArray.indexOf('playlist') + 1;
+        const spotifyId = urlArray[IdIndex].split('?')[0];
 
         var response = await getPlaylist(spotifyId);
         var query = await response.json();
@@ -77,9 +77,10 @@ module.exports.run = async (client, message, args, guild) => {
 
         return songs;
 
-    } else if (urlArray[3] == 'track' && urlArray[4]) {
+    } else if (urlArray.includes('track')) {
 
-        const spotifyId = urlArray[4].split('?')[0];
+        const IdIndex = urlArray.indexOf('track') + 1;
+        const spotifyId = urlArray[IdIndex].split('?')[0];
 
         var response = await getTrack(spotifyId);
         var query = await response.json();
@@ -102,9 +103,10 @@ module.exports.run = async (client, message, args, guild) => {
 
         return songs;
 
-    } else if (urlArray[3] == 'album' && urlArray[4]) {
+    } else if (urlArray.includes('album')) {
 
-        const spotifyId = urlArray[4].split('?')[0];
+        const IdIndex = urlArray.indexOf('album') + 1;
+        const spotifyId = urlArray[IdIndex].split('?')[0];
 
         var response = await getAlbum(spotifyId);
         var query = await response.json();
@@ -159,12 +161,16 @@ module.exports.run = async (client, message, args, guild) => {
 
         return songs;
 
-    } else if (urlArray[3] == 'episode' || urlArray[3] == 'show') {
+    } else if (urlArray.includes('episode') || urlArray.includes('show')) {
 
         message.channel.send(strings[guild.language].podcastsNotCompatible);
         songs.type = null;
 
         return songs;
+
+    } else {
+
+        throw new Error('Invalid or unrecognized Spotify Link');
     }
 
     async function getPlaylist(spotifyId) {
