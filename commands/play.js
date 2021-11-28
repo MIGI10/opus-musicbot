@@ -147,16 +147,32 @@ module.exports.run = async (client, message, args, guild) => {
                         logError(err, '30', null, guild, serverQueue);
                     });
             } 
-            
-            if (error.message.includes('410')) { // Temporary inform message about restricted or sensitive videos
+            else if (error.message.includes('410')) { // Temporary inform message about restricted or sensitive videos
 
-                message.channel.send(strings[guild.language].botCouldNotPlayFlaggedSong.replace('%ERRORCODE%', errorCode));
+                serverQueue.textChannel.send(strings[guild.language].botCouldNotPlayFlaggedSong.replace('%ERRORCODE%', errorCode));
                 return idleFunction();
             }
-            
-            if (!error.message.includes('403') && !error.message.includes('410')) {
+            else if (error.message.includes('socket')) { // Temporary response to "Client network socket disconnected before secure TLS connection was established"
 
-                message.channel.send(strings[guild.language].botCouldNotPlaySong.replace('%ERRORCODE%', errorCode));
+                serverQueue.textChannel.send(strings[guild.language].botSocketError.replace('%ERRORCODE%', errorCode));
+
+                serverQueue.playing = false;
+                
+                if (serverQueue.player) {
+                    serverQueue.player.stop(true);
+                }
+
+                if (serverQueue.connection._state.status != 'destroyed') {
+                    serverQueue.connection.destroy();
+                }
+
+                client.queue.delete(message.guild.id);
+
+                return;
+            }
+            else {
+
+                serverQueue.textChannel.send(strings[guild.language].botCouldNotPlaySong.replace('%ERRORCODE%', errorCode));
                 return idleFunction();
             }
         });
@@ -465,12 +481,14 @@ module.exports.run = async (client, message, args, guild) => {
 
         } else {
 
-            const stream = youtubedl(song.url, {
+            const stream = youtubedl(`${song.url}&bpctr=99999999999999`, {
                 o: '-',
                 q: '',
                 f: 'bestaudio[ext=webm+acodec=opus+asr=48000]/bestaudio',
                 r: '100K',
-              }, { stdio: ['ignore', 'pipe', 'ignore'] });
+              }, { stdio: ['ignore', 'pipe', 'ignore'] })
+
+            stream.catch(err => null);
         
             var resource = voice.createAudioResource(stream.stdout, {
                 metadata: song
