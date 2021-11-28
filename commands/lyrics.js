@@ -33,7 +33,7 @@ module.exports.run = async (client, message, args, guild) => {
         let embedContents = '';
         let i = 0;
 
-        while (stringArray[0] && i < 5) {
+        while (stringArray[0] && i < 4) {
 
             while (embedContents.length < 1500 && stringArray[0]) {
 
