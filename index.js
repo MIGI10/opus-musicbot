@@ -2,6 +2,7 @@ const Discord = require('discord.js');
 const voice = require('@discordjs/voice');
 const db = require("mongoose");
 const Genius = require("genius-lyrics");
+const { DynamicPool } = require('node-worker-threads-pool'); 
 
 const config = require('./config.json');
 
@@ -15,6 +16,8 @@ const client = new Discord.Client({ intents: [
 });
 
 const geniusClient = new Genius.Client(config.geniusToken);
+
+const threadPool = new DynamicPool(8);
 
 const engStrings = require('./lang/eng.json');
 const spaStrings = require('./lang/spa.json');
@@ -37,6 +40,7 @@ client.cmdaliases = new Discord.Collection();
 client.discordjs = Discord;
 client.discordjsvoice = voice;
 client.geniusapi = geniusClient;
+client.threadPool = threadPool;
 
 const queue = new Map();
 client.queue = queue;
