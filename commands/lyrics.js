@@ -21,7 +21,7 @@ module.exports.run = async (client, message, args, guild) => {
     const firstSong = searches[0];
 
     if (!firstSong) {
-        return message.reply(strings[guild.language].noLyricsFound);
+        return message.reply(strings[guild.language].noLyricsFound.replace("%SONGNAME%", songName));
     }
 
     const lyrics = await firstSong.lyrics();
