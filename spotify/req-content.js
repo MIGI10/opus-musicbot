@@ -161,6 +161,37 @@ module.exports.run = async (client, message, args, guild) => {
 
         return songs;
 
+    } else if (urlArray.includes('artist')) {
+
+        const IdIndex = urlArray.indexOf('artist') + 1;
+        const spotifyId = urlArray[IdIndex].split('?')[0];
+
+        var response = await getArtist(spotifyId);
+        var query = await response.json();
+    
+        if (response.status == 401) {
+
+            await reqAuth.run(client);
+            response = await getArtist(spotifyId);
+            query = await response.json();
+        }
+
+        if (response.status == 404) {
+            return message.reply(strings[guild.language].spotifyNotFound);
+        }
+
+        for (const track of query.tracks) {
+            if (track) {
+                const songName = track.name + ' ' + track.artists[0].name;
+                songs.push(songName);
+            }
+        }
+
+        songs.total = query.tracks.length;
+        songs.type = 'artist';
+
+        return songs;
+
     } else if (urlArray.includes('episode') || urlArray.includes('show')) {
 
         message.channel.send(strings[guild.language].podcastsNotCompatible);
@@ -216,6 +247,20 @@ module.exports.run = async (client, message, args, guild) => {
         }
 
         const response = await fetch(`https://api.spotify.com/v1/albums/${spotifyId}/tracks?${parameters}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${client.spotifytoken}`
+            }
+        })
+
+        return response;
+    }
+
+    async function getArtist(spotifyId) {
+
+        const response = await fetch(`https://api.spotify.com/v1/artists/${spotifyId}/top-tracks?market=ES`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

@@ -218,7 +218,7 @@ module.exports.run = async (client, message, args, guild) => {
 
                 let i = 1;
 
-                if (songs.type == 'playlist' || songs.type == 'album') {
+                if (songs.type == 'playlist' || songs.type == 'album' || songs.type == 'artist') {
 
                     if (songs.type == 'playlist') {
 
@@ -226,11 +226,15 @@ module.exports.run = async (client, message, args, guild) => {
                             strings[guild.language].songsLoading.replace('%SONGCOUNT%', songs.length):
                             strings[guild.language].playlistMaxesLimit.replace('%TOTALSONGCOUNT%', songs.total);
 
-                    } else {
+                    } else if (songs.type == 'album') {
 
                         embedDesc = songs.total - songs.offset <= 50 ?
                             strings[guild.language].songsLoading.replace('%SONGCOUNT%', songs.length):
                             strings[guild.language].albumMaxesLimit.replace('%TOTALSONGCOUNT%', songs.total);
+
+                    } else {
+
+                        embedDesc = strings[guild.language].songsLoading.replace('%SONGCOUNT%', songs.total);
                     }
 
                     let queuedEmbed = new client.discordjs.MessageEmbed()
