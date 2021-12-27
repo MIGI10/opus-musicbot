@@ -6,7 +6,7 @@ const eventsFolder = join(__dirname, "..", "events");
 
 module.exports.run = async (client, message, args) => {
 
-    delete require.cache['/usr/src/bot/spotify/req-content.js'];
+    delete require.cache['/usr/src/bot/spotify/reqContent.js'];
 
     await client.commands.clear();
     await client.cmdaliases.clear();

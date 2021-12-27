@@ -1,5 +1,5 @@
 const youtubeSearch = require('youtube-search-api');
-const spotifyReq = require('../spotify/req-content');
+const spotifyReq = require('../spotify/reqContent');
 const ytdl = require('ytdl-core');
 const youtubedl = require('youtube-dl-exec').raw;
 const fs = require("fs");
@@ -208,7 +208,7 @@ module.exports.run = async (client, message, args, guild) => {
             
             if (argsJoined.includes('open.spotify.com/')) {
 
-                const songs = await spotifyReq.run(client, message, args, guild)
+                const songs = await spotifyReq(client, message, args, guild)
                     .catch(err => {
                         let errorCode = logError(err, '15', message, guild, serverQueue);
                         return message.channel.send(strings[guild.language].botCouldNotQueueSpotify.replace('%ERRORCODE%', errorCode));

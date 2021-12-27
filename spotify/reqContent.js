@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
-const reqAuth = require('./req-authorization');
+const reqAuth = require('./reqAuthorization');
 
-module.exports.run = async (client, message, args, guild) => {
+module.exports = async (client, message, args, guild) => {
 
     if (args[1] && !isNaN(args[1])) {
         var offset = parseInt(args[1]);
@@ -24,7 +24,7 @@ module.exports.run = async (client, message, args, guild) => {
     
         if (response.status == 401) {
 
-            await reqAuth.run(client);
+            await reqAuth(client);
             response = await getPlaylist(spotifyId);
             query = await response.json();
         }
@@ -87,7 +87,7 @@ module.exports.run = async (client, message, args, guild) => {
     
         if (response.status == 401) {
 
-            await reqAuth.run(client);
+            await reqAuth(client);
             response = await getTrack(spotifyId);
             query = await response.json();
         }
@@ -113,7 +113,7 @@ module.exports.run = async (client, message, args, guild) => {
     
         if (response.status == 401) {
 
-            await reqAuth.run(client);
+            await reqAuth(client);
             response = await getAlbum(spotifyId);
             query = await response.json();
         }
@@ -171,7 +171,7 @@ module.exports.run = async (client, message, args, guild) => {
     
         if (response.status == 401) {
 
-            await reqAuth.run(client);
+            await reqAuth(client);
             response = await getArtist(spotifyId);
             query = await response.json();
         }
