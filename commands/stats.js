@@ -1,11 +1,10 @@
 module.exports.run = async (client, message, args, guild) => {
 
-    const guilds = await client.guilds.fetch();    
     const dbGuilds = await client.db.guild.find();  
 
     const statsEmbed = new client.discordjs.MessageEmbed()
         .setTitle('Stats')
-        .addField('Server Count', `${guilds.size}`)
+        .addField('Server Count', `${client.guilds.cache.size}`)
         .addField('Configured Server Count', `${dbGuilds.length}`)
         .addField('Active Players', `${client.queue.size}`)
         .setColor(65453)

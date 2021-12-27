@@ -4,31 +4,26 @@ module.exports = async (client) => {
 
     async function updateCounters() {
 
-        const supportServer = await client.guilds.fetch('904435056968351776');
+        const supportServer = client.guilds.cache.get('904435056968351776');
         const serversChannel = await supportServer.channels.fetch('907960416032923689');
         const membersChannel = await supportServer.channels.fetch('907960481808007168');
 
         const serversChannelName = serversChannel.name;
         const membersChannelName = membersChannel.name;
 
+        const guilds = client.guilds.cache;
+
         let memberCount = 0;
 
-        const guilds = await client.guilds.fetch();
-
-        let i = 1;
+        let i = 0;
 
         guilds.forEach((guild) => {
-            setTimeout(() => {
-                guild.fetch().then((g) => {
-                    memberCount += g.memberCount;
-                })
-            }, i * 3000);
+
+            memberCount += guild.memberCount;
 
             if (i >= guilds.size) {
-                setTimeout(() => {
-                    serversChannel.setName(serversChannelName.replace(/[0-9]+/g, guilds.size));
-                    membersChannel.setName(membersChannelName.replace(/[0-9]+/g, memberCount));
-                }, i * 3000);
+                serversChannel.setName(serversChannelName.replace(/[0-9]+/g, guilds.size));
+                membersChannel.setName(membersChannelName.replace(/[0-9]+/g, memberCount));
             }
 
             i++

@@ -13,7 +13,7 @@ module.exports = async (client) => {
 
             setTimeout(async () => {
 
-                const guildInfo = await client.guilds.fetch(guild.id);
+                const guildInfo = client.guilds.cache.get(guild.id);
 
                 const owner = await guildInfo.fetchOwner();
 
