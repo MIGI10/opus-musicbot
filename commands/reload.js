@@ -1,5 +1,5 @@
-const loadCommands = require('../structures/command');
-const loadEvents = require('../structures/event');
+const loadCommands = require('../loaders/command');
+const loadEvents = require('../loaders/event');
 const { readdirSync } = require('fs');
 const { join } = require('path');
 const eventsFolder = join(__dirname, "..", "events");
