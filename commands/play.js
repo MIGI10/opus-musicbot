@@ -199,8 +199,8 @@ module.exports.run = async (client, message, args, guild) => {
             const newSong = serverQueue.songs[serverQueue.songs.length - 1];
 
             const queuedEmbed = new client.discordjs.MessageEmbed()
-            .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) ${strings[guild.language].songQueued.replace('%POSNUM%', serverQueue.songs.length - 1)}`)
-            .setColor(65453)
+                .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) ${strings[guild.language].songQueued.replace('%POSNUM%', serverQueue.songs.length - 1)}`)
+                .setColor(65453);
 
             message.channel.send({ embeds: [queuedEmbed]});
         
@@ -220,28 +220,11 @@ module.exports.run = async (client, message, args, guild) => {
 
                 if (songs.type == 'playlist' || songs.type == 'album' || songs.type == 'artist') {
 
-                    if (songs.type == 'playlist') {
-
-                        embedDesc = songs.total - songs.offset <= 100 ?
-                            strings[guild.language].songsLoading.replace('%SONGCOUNT%', songs.length):
-                            strings[guild.language].playlistMaxesLimit.replace('%TOTALSONGCOUNT%', songs.total);
-
-                    } else if (songs.type == 'album') {
-
-                        embedDesc = songs.total - songs.offset <= 50 ?
-                            strings[guild.language].songsLoading.replace('%SONGCOUNT%', songs.length):
-                            strings[guild.language].albumMaxesLimit.replace('%TOTALSONGCOUNT%', songs.total);
-
-                    } else {
-
-                        embedDesc = strings[guild.language].songsLoading.replace('%SONGCOUNT%', songs.total);
-                    }
-
                     let queuedEmbed = new client.discordjs.MessageEmbed()
                         .setAuthor(strings[guild.language].songsBeingQueued, 'https://i.gifer.com/origin/6a/6af36f7b9c1ac8a7e9d7dbcaa479b616.gif')
-                        .setDescription(embedDesc)
                         .setColor(65453)
-        
+                        .setDescription('\n\n' + strings[guild.language].songsLoading.replace('%SONGCOUNT%', songs.length))
+
                     const queuedMsg = await message.channel.send({ embeds: [queuedEmbed]});
 
                     serverQueue.updating = true;
@@ -257,6 +240,16 @@ module.exports.run = async (client, message, args, guild) => {
                             }
     
                             if (i == songs.length) {
+
+                                if (songs.length <= 100) {
+                                    waitTime = 7000;
+                                }
+                                else if (songs.length <= 200) {
+                                    waitTime = 10000;
+                                }
+                                else {
+                                    waitTime = (songs.length / 20) * 1000;
+                                }
 
                                 setTimeout(async () => {
 
@@ -280,12 +273,13 @@ module.exports.run = async (client, message, args, guild) => {
                                     serverQueue.updating = false;
 
                                     queuedEmbed = new client.discordjs.MessageEmbed()
-                                    .setDescription(strings[guild.language].songsQueued.replace('%SONGCOUNT%', i - 1))
-                                    .setColor(65453)
+                                        .setDescription(strings[guild.language].songsQueued.replace('%SONGCOUNT%', i - 1).replace('%CONTENTNAME%', songs.contentName))
+                                        .setAuthor(songs.contentName, songs.contentIcon)
+                                        .setColor(65453);
                         
                                     queuedMsg.edit({ embeds: [queuedEmbed]});
 
-                                }, 10000);
+                                }, waitTime);
                             }
 
                             i++
@@ -299,8 +293,8 @@ module.exports.run = async (client, message, args, guild) => {
                     const newSong = serverQueue.songs[serverQueue.songs.length - 1];
 
                     const queuedEmbed = new client.discordjs.MessageEmbed()
-                    .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) ${strings[guild.language].songQueued.replace('%POSNUM%', serverQueue.songs.length - 1)}`)
-                    .setColor(65453)
+                        .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) ${strings[guild.language].songQueued.replace('%POSNUM%', serverQueue.songs.length - 1)}`)
+                        .setColor(65453);
         
                     message.channel.send({ embeds: [queuedEmbed]});
                 }
@@ -344,23 +338,6 @@ module.exports.run = async (client, message, args, guild) => {
     async function queue(songName, requesterId, requesterUsertag, position) {
 
         const videoList = await youtubeSearch.GetListByKeyword(songName, false);
-
-        const writeStream = fs.createWriteStream(path.join(
-            __dirname,
-            "..",
-            "searches",
-            `${new Date().toISOString()}.log`
-        ));
-
-        for (const vid of videoList.items) {
-            writeStream.write(`${JSON.stringify(vid, null, 4)}\n`)
-        }
-
-        writeStream.on('error', (err) => {
-            console.error(err)
-        });
-
-        writeStream.end();
 
         let i = 0;
         video = videoList.items[0];

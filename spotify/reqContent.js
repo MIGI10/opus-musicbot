@@ -19,26 +19,24 @@ module.exports = async (client, message, args, guild) => {
         const IdIndex = urlArray.indexOf('playlist') + 1;
         const spotifyId = urlArray[IdIndex].split('?')[0];
 
-        var response = await getPlaylist(spotifyId);
-        var query = await response.json();
-    
-        if (response.status == 401) {
+        var query = await getPlaylist(spotifyId);
 
-            await reqAuth(client);
-            response = await getPlaylist(spotifyId);
-            query = await response.json();
+        if (query == 'private') {
+            return message.reply(strings[guild.language].playlistPrivate);
         }
 
-        if (response.status == 403) {
-            return message.reply(strings[guild.language].playlistPrivate)
-        }
-
-        if (response.status == 404) {
+        if (query == 'not found') {
             return message.reply(strings[guild.language].playlistNotFound);
         }
 
-        if (offset > query.total) {
+        if (offset > query.tracks.total) {
             return message.reply(strings[guild.language].playlistInvalidOffset);
+        }
+
+        if (offset) {
+
+            query.tracks.items = query.tracks.items.slice(offset - 1);
+            query.tracks.total -= offset - 1; 
         }
 
         if (args.includes('reverse')) {
@@ -46,12 +44,12 @@ module.exports = async (client, message, args, guild) => {
             if (offset) {
                 message.channel.send(strings[guild.language].playlistOffsetReverse.replace('%OFFSET%', offset));
             } else {
-                message.channel.send(strings[guild.language].playlistReverse)
+                message.channel.send(strings[guild.language].playlistReverse);
             }
 
-            for (let i = query.items.length - 1; i >= 0; i--) {
-                if (query.items[i].track) {
-                    const songName = query.items[i].track.name + ' ' + query.items[i].track.artists[0].name;
+            for (let i = query.tracks.items.length - 1; i >= 0; i--) {
+                if (query.tracks.items[i].track) {
+                    const songName = query.tracks.items[i].track.name + ' ' + query.tracks.items[i].track.artists[0].name;
                     songs.push(songName);
                 }
             }
@@ -62,7 +60,7 @@ module.exports = async (client, message, args, guild) => {
                 message.channel.send(strings[guild.language].playlistOffset.replace('%OFFSET%', offset));
             }
 
-            for (const item of query.items) {
+            for (const item of query.tracks.items) {
                 if (item.track) {
                     const songName = item.track.name + ' ' + item.track.artists[0].name;
                     songs.push(songName);
@@ -70,10 +68,11 @@ module.exports = async (client, message, args, guild) => {
             }
         }
 
-        songs.total = query.total;
+        songs.total = query.tracks.total;
         songs.type = 'playlist';
         songs.offset = offset;
-
+        songs.contentName = query.name;
+        songs.contentIcon = query.images[0].url;
 
         return songs;
 
@@ -82,18 +81,10 @@ module.exports = async (client, message, args, guild) => {
         const IdIndex = urlArray.indexOf('track') + 1;
         const spotifyId = urlArray[IdIndex].split('?')[0];
 
-        var response = await getTrack(spotifyId);
-        var query = await response.json();
-    
-        if (response.status == 401) {
+        var query = await getTrack(spotifyId);
 
-            await reqAuth(client);
-            response = await getTrack(spotifyId);
-            query = await response.json();
-        }
-
-        if (response.status == 404) {
-            return message.reply(strings[guild.language].spotifyNotFound);
+        if (query == 'not found') {
+            return message.reply(strings[guild.language].playlistNotFound);
         }
 
         const songName = query.name + ' ' + query.artists[0].name;
@@ -108,22 +99,20 @@ module.exports = async (client, message, args, guild) => {
         const IdIndex = urlArray.indexOf('album') + 1;
         const spotifyId = urlArray[IdIndex].split('?')[0];
 
-        var response = await getAlbum(spotifyId);
-        var query = await response.json();
-    
-        if (response.status == 401) {
+        var query = await getAlbum(spotifyId);
 
-            await reqAuth(client);
-            response = await getAlbum(spotifyId);
-            query = await response.json();
+        if (query == 'not found') {
+            return message.reply(strings[guild.language].playlistNotFound);
         }
 
-        if (response.status == 404) {
-            return message.reply(strings[guild.language].spotifyNotFound);
-        }
-
-        if (offset > query.total) {
+        if (offset > query.tracks.total) {
             return message.reply(strings[guild.language].playlistInvalidOffset);
+        }
+
+        if (offset) {
+
+            query.tracks.items = query.tracks.items.slice(offset - 1);
+            query.tracks.total -= offset - 1; 
         }
 
         if (args.includes('reverse')) {
@@ -134,9 +123,9 @@ module.exports = async (client, message, args, guild) => {
                 message.channel.send(strings[guild.language].playlistReverse)
             }
 
-            for (let i = query.items.length - 1; i >= 0; i--) {
-                if (query.items[i]) {
-                    const songName = query.items[i].name + ' ' + query.items[i].artists[0].name;
+            for (let i = query.tracks.items.length - 1; i >= 0; i--) {
+                if (query.tracks.items[i]) {
+                    const songName = query.tracks.items[i].name + ' ' + query.tracks.items[i].artists[0].name;
                     songs.push(songName);
                 }
             }
@@ -147,7 +136,7 @@ module.exports = async (client, message, args, guild) => {
                 message.channel.send(strings[guild.language].playlistOffset.replace('%OFFSET%', offset))
             }
 
-            for (const item of query.items) {
+            for (const item of query.tracks.items) {
                 if (item) {
                     const songName = item.name + ' ' + item.artists[0].name;
                     songs.push(songName);
@@ -155,9 +144,11 @@ module.exports = async (client, message, args, guild) => {
             }
         }
 
-        songs.total = query.total;
+        songs.total = query.tracks.total;
         songs.type = 'album';
         songs.offset = offset;
+        songs.contentName = query.name;
+        songs.contentIcon = query.images[0].url;
 
         return songs;
 
@@ -166,17 +157,9 @@ module.exports = async (client, message, args, guild) => {
         const IdIndex = urlArray.indexOf('artist') + 1;
         const spotifyId = urlArray[IdIndex].split('?')[0];
 
-        var response = await getArtist(spotifyId);
-        var query = await response.json();
+        var query = await getArtist(spotifyId);
     
-        if (response.status == 401) {
-
-            await reqAuth(client);
-            response = await getArtist(spotifyId);
-            query = await response.json();
-        }
-
-        if (response.status == 404) {
+        if (query == 'not found') {
             return message.reply(strings[guild.language].spotifyNotFound);
         }
 
@@ -189,6 +172,8 @@ module.exports = async (client, message, args, guild) => {
 
         songs.total = query.tracks.length;
         songs.type = 'artist';
+        songs.contentName = query.name;
+        songs.contentIcon = query.imageUrl;
 
         return songs;
 
@@ -206,13 +191,9 @@ module.exports = async (client, message, args, guild) => {
 
     async function getPlaylist(spotifyId) {
 
-        if (offset) {
-            parameters = `fields=total,items(track(name%2Cartists(name)))&offset=${offset}`
-        } else {
-            parameters = 'fields=total,items(track(name%2Cartists(name)))'
-        }
+        let parameters = 'fields=name,images.url,tracks.next,tracks.total,tracks.items(track(name%2Cartists(name)))'
 
-        const response = await fetch(`https://api.spotify.com/v1/playlists/${spotifyId}/tracks?${parameters}`, {
+        var response = await fetch(`https://api.spotify.com/v1/playlists/${spotifyId}?${parameters}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -220,13 +201,64 @@ module.exports = async (client, message, args, guild) => {
                 'Authorization': `Bearer ${client.spotifytoken}`
             }
         })
+    
+        if (response.status == 401) {
+
+            await reqAuth(client);
+            
+            response = await fetch(`https://api.spotify.com/v1/playlists/${spotifyId}?${parameters}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${client.spotifytoken}`
+                }
+            })
+        }
+
+        if (response.status == 403) {
+            return 'private';
+        }
+
+        if (response.status == 404) {
+            return 'not found';
+        }
+
+        response = await response.json();
+
+        if (response.tracks.next) {
+
+            do {
+
+                if (query && query.next) {
+                    nextItemsUrl = query.next;
+                }
+                else {
+                    nextItemsUrl = response.tracks.next;
+                }
+
+                query = await fetch(nextItemsUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${client.spotifytoken}`
+                    }
+                })
+    
+                query = await query.json();
+                
+                response.tracks.items = response.tracks.items.concat(query.items);
+
+            } while (query.next);
+        }
 
         return response;
     }
 
     async function getTrack(spotifyId) {
 
-        const response = await fetch(`https://api.spotify.com/v1/tracks/${spotifyId}`, {
+        var response = await fetch(`https://api.spotify.com/v1/tracks/${spotifyId}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -234,19 +266,33 @@ module.exports = async (client, message, args, guild) => {
                 'Authorization': `Bearer ${client.spotifytoken}`
             }
         })
+
+        if (response.status == 401) {
+
+            await reqAuth(client);
+            
+            response = await fetch(`https://api.spotify.com/v1/tracks/${spotifyId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${client.spotifytoken}`
+                }
+            })
+        }
+
+        if (response.status == 404) {
+            return 'not found';
+        }
+
+        response = await response.json();
 
         return response;
     }
 
     async function getAlbum(spotifyId) {
 
-        if (offset) {
-            parameters = `limit=50&offset=${offset}`
-        } else {
-            parameters = 'limit=50'
-        }
-
-        const response = await fetch(`https://api.spotify.com/v1/albums/${spotifyId}/tracks?${parameters}`, {
+        var response = await fetch(`https://api.spotify.com/v1/albums/${spotifyId}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -254,13 +300,60 @@ module.exports = async (client, message, args, guild) => {
                 'Authorization': `Bearer ${client.spotifytoken}`
             }
         })
+
+        if (response.status == 401) {
+
+            await reqAuth(client);
+            
+            response = await fetch(`https://api.spotify.com/v1/albums/${spotifyId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${client.spotifytoken}`
+                }
+            })
+        }
+
+        if (response.status == 404) {
+            return 'not found';
+        }
+
+        response = await response.json();
+
+        if (response.tracks.next) {
+
+            do {
+
+                if (query && query.next) {
+                    nextItemsUrl = query.next;
+                }
+                else {
+                    nextItemsUrl = response.tracks.next;
+                }
+
+                query = await fetch(nextItemsUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${client.spotifytoken}`
+                    }
+                })
+    
+                query = await query.json();
+                
+                response.tracks.items = response.tracks.items.concat(query.items);
+
+            } while (query.next);
+        }
 
         return response;
     }
 
     async function getArtist(spotifyId) {
 
-        const response = await fetch(`https://api.spotify.com/v1/artists/${spotifyId}/top-tracks?market=ES`, {
+        var response = await fetch(`https://api.spotify.com/v1/artists/${spotifyId}/top-tracks?market=ES`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -268,6 +361,40 @@ module.exports = async (client, message, args, guild) => {
                 'Authorization': `Bearer ${client.spotifytoken}`
             }
         })
+
+        if (response.status == 401) {
+
+            await reqAuth(client);
+            
+            response = await fetch(`https://api.spotify.com/v1/artists/${spotifyId}/top-tracks?market=ES`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${client.spotifytoken}`
+                }
+            })
+        }
+
+        if (response.status == 404) {
+            return 'not found';
+        }
+
+        response = await response.json();
+
+        let additionalInfo = await fetch(`https://api.spotify.com/v1/artists/${spotifyId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${client.spotifytoken}`
+            }
+        })
+
+        additionalInfo = await additionalInfo.json();
+
+        response.name = additionalInfo.name;
+        response.imageUrl = additionalInfo.images[0].url;
 
         return response;
     }
