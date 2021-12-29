@@ -41,10 +41,10 @@ client.geniusapi = geniusClient;
 const queue = new Map();
 client.queue = queue;
 
-const commands = require("./structures/command");
+const commands = require("./loaders/command");
 commands.run(client);
 
-const events = require("./structures/event");
+const events = require("./loaders/event");
 events.run(client);
 
 function dbConnect() {
