@@ -45,10 +45,10 @@ client.threadPool = threadPool;
 const queue = new Map();
 client.queue = queue;
 
-const commands = require("./structures/command");
+const commands = require("./loaders/command");
 commands.run(client);
 
-const events = require("./structures/event");
+const events = require("./loaders/event");
 events.run(client);
 
 function dbConnect() {
@@ -77,8 +77,12 @@ const guild = db.model("guild", guildSchema);
 
 db.guild = guild;
 
-process.on('unhandledRejection', error => {
-	console.error('[EVENT] Unhandled promise rejection:', error);
+process.on('unhandledRejection', (reason, promise) => {
+	console.error('[EVENT] Unhandled promise rejection at:', promise, 'Reason:', reason);
+});
+
+process.on('uncaughtException', (error, origin) => {
+	console.error('[EVENT] Uncaught exception at:', origin, 'Error:', error);
 });
 
 client.on('warn', (warn) => console.warn('[EVENT - WARN]' + warn));

@@ -21,7 +21,7 @@ module.exports.run = async (client, message, args, guild) => {
     const firstSong = searches[0];
 
     if (!firstSong) {
-        return message.reply(strings[guild.language].noLyricsFound);
+        return message.reply(strings[guild.language].noLyricsFound.replace("%SONGNAME%", songName));
     }
 
     const lyrics = await firstSong.lyrics();
@@ -33,7 +33,7 @@ module.exports.run = async (client, message, args, guild) => {
         let embedContents = '';
         let i = 0;
 
-        while (stringArray[0] && i < 5) {
+        while (stringArray[0] && i < 4) {
 
             while (embedContents.length < 1500 && stringArray[0]) {
 

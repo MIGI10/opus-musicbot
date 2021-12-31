@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
 
-module.exports.run = async (client) => {
+module.exports = async (client) => {
 
     const encodedString = Buffer.from(`${client.config.spotifyClientId}:${client.config.spotifyClientSecret}`).toString('base64');
 

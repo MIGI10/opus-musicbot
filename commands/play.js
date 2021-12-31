@@ -1,9 +1,7 @@
 const youtubeSearch = require('youtube-search-api');
-const spotifyReq = require('../spotify/req-content');
+const spotifyReq = require('../spotify/reqContent');
 const ytdl = require('ytdl-core');
 const youtubedl = require('youtube-dl-exec').raw;
-const fs = require("fs");
-const path = require('path');
 
 module.exports.run = async (client, message, args, guild) => {
 
@@ -147,16 +145,32 @@ module.exports.run = async (client, message, args, guild) => {
                         logError(err, '30', null, guild, serverQueue);
                     });
             } 
-            
-            if (error.message.includes('410')) { // Temporary inform message about restricted or sensitive videos
+            else if (error.message.includes('410')) { // Temporary inform message about restricted or sensitive videos
 
-                message.channel.send(strings[guild.language].botCouldNotPlayFlaggedSong.replace('%ERRORCODE%', errorCode));
+                serverQueue.textChannel.send(strings[guild.language].botCouldNotPlayFlaggedSong.replace('%ERRORCODE%', errorCode));
                 return idleFunction();
             }
-            
-            if (!error.message.includes('403') && !error.message.includes('410')) {
+            else if (error.message.includes('socket')) { // Temporary response to "Client network socket disconnected before secure TLS connection was established"
 
-                message.channel.send(strings[guild.language].botCouldNotPlaySong.replace('%ERRORCODE%', errorCode));
+                serverQueue.textChannel.send(strings[guild.language].botSocketError.replace('%ERRORCODE%', errorCode));
+
+                serverQueue.playing = false;
+                
+                if (serverQueue.player) {
+                    serverQueue.player.stop(true);
+                }
+
+                if (serverQueue.connection._state.status != 'destroyed') {
+                    serverQueue.connection.destroy();
+                }
+
+                client.queue.delete(message.guild.id);
+
+                return;
+            }
+            else {
+
+                serverQueue.textChannel.send(strings[guild.language].botCouldNotPlaySong.replace('%ERRORCODE%', errorCode));
                 return idleFunction();
             }
         });
@@ -183,8 +197,8 @@ module.exports.run = async (client, message, args, guild) => {
             const newSong = serverQueue.songs[serverQueue.songs.length - 1];
 
             const queuedEmbed = new client.discordjs.MessageEmbed()
-            .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) ${strings[guild.language].songQueued}`)
-            .setColor(65453)
+                .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) ${strings[guild.language].songQueued.replace('%POSNUM%', serverQueue.songs.length - 1)}`)
+                .setColor(65453);
 
             message.channel.send({ embeds: [queuedEmbed]});
         
@@ -192,7 +206,7 @@ module.exports.run = async (client, message, args, guild) => {
             
             if (argsJoined.includes('open.spotify.com/')) {
 
-                const songs = await spotifyReq.run(client, message, args, guild)
+                const songs = await spotifyReq(client, message, args, guild)
                     .catch(err => {
                         let errorCode = logError(err, '15', message, guild, serverQueue);
                         return message.channel.send(strings[guild.language].botCouldNotQueueSpotify.replace('%ERRORCODE%', errorCode));
@@ -202,26 +216,13 @@ module.exports.run = async (client, message, args, guild) => {
 
                 let i = 1;
 
-                if (songs.type == 'playlist' || songs.type == 'album') {
-
-                    if (songs.type == 'playlist') {
-
-                        embedDesc = songs.total - songs.offset <= 100 ?
-                            strings[guild.language].songsLoading.replace('%SONGCOUNT%', songs.length):
-                            strings[guild.language].playlistMaxesLimit.replace('%TOTALSONGCOUNT%', songs.total);
-
-                    } else {
-
-                        embedDesc = songs.total - songs.offset <= 50 ?
-                            strings[guild.language].songsLoading.replace('%SONGCOUNT%', songs.length):
-                            strings[guild.language].albumMaxesLimit.replace('%TOTALSONGCOUNT%', songs.total);
-                    }
+                if (songs.type == 'playlist' || songs.type == 'album' || songs.type == 'artist') {
 
                     let queuedEmbed = new client.discordjs.MessageEmbed()
                         .setAuthor(strings[guild.language].songsBeingQueued, 'https://i.gifer.com/origin/6a/6af36f7b9c1ac8a7e9d7dbcaa479b616.gif')
-                        .setDescription(embedDesc)
                         .setColor(65453)
-        
+                        .setDescription('\n\n' + strings[guild.language].songsLoading.replace('%SONGCOUNT%', songs.length))
+
                     const queuedMsg = await message.channel.send({ embeds: [queuedEmbed]});
 
                     serverQueue.updating = true;
@@ -237,6 +238,16 @@ module.exports.run = async (client, message, args, guild) => {
                             }
     
                             if (i == songs.length) {
+
+                                if (songs.length <= 100) {
+                                    waitTime = 7000;
+                                }
+                                else if (songs.length <= 200) {
+                                    waitTime = 10000;
+                                }
+                                else {
+                                    waitTime = (songs.length / 20) * 1000;
+                                }
 
                                 setTimeout(async () => {
 
@@ -260,12 +271,13 @@ module.exports.run = async (client, message, args, guild) => {
                                     serverQueue.updating = false;
 
                                     queuedEmbed = new client.discordjs.MessageEmbed()
-                                    .setDescription(strings[guild.language].songsQueued.replace('%SONGCOUNT%', i - 1))
-                                    .setColor(65453)
+                                        .setDescription(strings[guild.language].songsQueued.replace('%SONGCOUNT%', i - 1).replace('%CONTENTNAME%', songs.contentName))
+                                        .setAuthor(songs.contentName, songs.contentIcon)
+                                        .setColor(65453);
                         
                                     queuedMsg.edit({ embeds: [queuedEmbed]});
 
-                                }, 10000);
+                                }, waitTime);
                             }
 
                             i++
@@ -279,8 +291,8 @@ module.exports.run = async (client, message, args, guild) => {
                     const newSong = serverQueue.songs[serverQueue.songs.length - 1];
 
                     const queuedEmbed = new client.discordjs.MessageEmbed()
-                    .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) ${strings[guild.language].songQueued}`)
-                    .setColor(65453)
+                        .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) ${strings[guild.language].songQueued.replace('%POSNUM%', serverQueue.songs.length - 1)}`)
+                        .setColor(65453);
         
                     message.channel.send({ embeds: [queuedEmbed]});
                 }
@@ -309,7 +321,7 @@ module.exports.run = async (client, message, args, guild) => {
                     const newSong = serverQueue.songs[serverQueue.songs.length - 1];
 
                     const queuedEmbed = new client.discordjs.MessageEmbed()
-                    .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) ${strings[guild.language].songQueued}`)
+                    .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) ${strings[guild.language].songQueued.replace('%POSNUM%', serverQueue.songs.length - 1)}`)
                     .setColor(65453)
         
                     message.channel.send({ embeds: [queuedEmbed]});
@@ -324,23 +336,6 @@ module.exports.run = async (client, message, args, guild) => {
     async function queue(songName, requesterId, requesterUsertag, position) {
 
         const videoList = await youtubeSearch.GetListByKeyword(songName, false);
-
-        const writeStream = fs.createWriteStream(path.join(
-            __dirname,
-            "..",
-            "searches",
-            `${new Date().toISOString()}.log`
-        ));
-
-        for (const vid of videoList.items) {
-            writeStream.write(`${JSON.stringify(vid, null, 4)}\n`)
-        }
-
-        writeStream.on('error', (err) => {
-            console.error(err)
-        });
-
-        writeStream.end();
 
         let i = 0;
         video = videoList.items[0];
@@ -430,8 +425,6 @@ module.exports.run = async (client, message, args, guild) => {
     }
 
     async function play(song, queue, error) {
-
-        if (!song) return;
     
         if (!queue.player) {
     
@@ -443,6 +436,8 @@ module.exports.run = async (client, message, args, guild) => {
     
             queue.player = player;
         }
+
+        if (!song) return;
 
         if (!error && song.durationSeconds < 600) { // Temporary solution to player aborted ytdl-core bug for long videos
 
@@ -465,12 +460,14 @@ module.exports.run = async (client, message, args, guild) => {
 
         } else {
 
-            const stream = youtubedl(song.url, {
+            const stream = youtubedl(`${song.url}&bpctr=99999999999999`, {
                 o: '-',
                 q: '',
                 f: 'bestaudio[ext=webm+acodec=opus+asr=48000]/bestaudio',
                 r: '100K',
-              }, { stdio: ['ignore', 'pipe', 'ignore'] });
+              }, { stdio: ['ignore', 'pipe', 'ignore'] })
+
+            stream.catch(err => null);
         
             var resource = voice.createAudioResource(stream.stdout, {
                 metadata: song

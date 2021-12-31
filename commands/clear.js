@@ -30,7 +30,7 @@ module.exports.run = async (client, message, args, guild) => {
 
     } else {
 
-        message.channel.send(strings[guild.language].skipMessage.replace('%USERCOUNT%', (Math.ceil(usersConnected*0.5))-1).replace('%TOTALUSERCOUNT%', usersConnected).replace('%PREFIX%', client.prefix));
+        message.channel.send(strings[guild.language].clearMessage.replace('%USERCOUNT%', (Math.ceil(usersConnected*0.5))-1).replace('%TOTALUSERCOUNT%', usersConnected).replace('%PREFIX%', client.prefix));
 
         let filter = m => m.content.split(' ')[0] == `${client.prefix}clear` && m.author.id !== message.author.id && m.member.voice.channel && m.member.voice.channel == serverQueue.voiceChannel;
 

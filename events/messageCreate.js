@@ -14,11 +14,23 @@ module.exports = async (client, message) => {
         return
     }
 
-    if (!message.content.toLowerCase().startsWith(client.prefix)) return;
+    if (!message.content.toLowerCase().startsWith(client.prefix) && !message.mentions.members.get(client.user.id)) return;
 
     const args = message.content.split(/ +/g);
-    
-    const command = args.shift().slice(client.prefix.length).toLowerCase();
+
+    const firstArg = args.shift().toLowerCase();
+
+    if (firstArg.startsWith(client.prefix)) {
+        command = firstArg.slice(client.prefix.length);
+    }
+    else {
+        if (args[0]) {
+            command = args.shift().toLowerCase();
+        }
+        else {
+            return;
+        }
+    }
 
     const cmd = client.commands.get(command)?
         client.commands.get(command):
@@ -26,7 +38,7 @@ module.exports = async (client, message) => {
 
     if (!cmd) return;
 
-    const guild = await client.db.guild.findOne({ 
+    const guild = await client.db.guild.findOne({
         id: message.guild.id,
     }).catch(err => console.log(err));
 
