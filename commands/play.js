@@ -2,8 +2,6 @@ const youtubeSearch = require('youtube-search-api');
 const spotifyReq = require('../spotify/reqContent');
 const ytdl = require('ytdl-core');
 const youtubedl = require('youtube-dl-exec').raw;
-const fs = require("fs");
-const path = require('path');
 
 module.exports.run = async (client, message, args, guild) => {
 

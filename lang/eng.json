@@ -64,6 +64,7 @@
     "botNothingPlaying": "There is nothing playing currently",
     "queueName": "%NAME%'s Queue",
     "pageNumber": "Page %PAGENUM% of %TOTALPAGECOUNT%",
+    "queueLength": "Total length: %LENGTH%",
     "searchResults": "Search Results",
     "searchHowToPlay": "To play a song: %PREFIX%play <song ID>",
     "userMustSpecifySongToRemove": "You must specify the number of the song you wish to remove, use `%PREFIX%queue` to view the queue and the numbering of the songs",

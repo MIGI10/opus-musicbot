@@ -22,10 +22,12 @@
         "2.2 - 29/12/21": [
             "Song added to queue message now shows at which position it was added",
             "Removed limit of 100 songs when loading Spotify content",
+            "Spotify content name and icon is now shown after loading it",
             "Spotify artists links now compatible, will load top songs from artist",
             "Spotify links starting with `/user/<username>` now compatible",
             "Added error messages for not found Spotify content",
             "Limited embeds from `lyrics` command to 5",
+            "`queue` command now shows total queue length",
             "YouTube age restricted videos now compatible",
             "Errors are now better handled and informed about",
             "Improved lang",

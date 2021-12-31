@@ -1,5 +1,3 @@
-const { Interaction } = require("discord.js");
-
 module.exports.run = async (client, message, args, guild) => {
 
     const MessageActionRow = client.discordjs.MessageActionRow;
@@ -58,9 +56,11 @@ module.exports.run = async (client, message, args, guild) => {
 
     } else {
 
-        let queueEmbed = await nowPlaying(serverQueue, message);
+        let queueEmbed = nowPlaying(serverQueue, message);
 
-        const totalPages = Math.ceil((serverQueue.songs.length - 1) / 6)
+        const totalPages = Math.ceil((serverQueue.songs.length - 1) / 6);
+
+        queueEmbed.setFooter(queueEmbed.footer.text.replace('%PAGENUM%', 1).replace('%TOTALPAGECOUNT%', totalPages != 0 ? totalPages : 1));
 
         if (totalPages === 0) {
 
@@ -79,6 +79,8 @@ module.exports.run = async (client, message, args, guild) => {
             const collector = message.channel.createMessageComponentCollector({ filter, time: 60000 });
 
             collector.on('collect', async int => {
+
+                if (msg.id != int.message.id) return;
 
                 if (int.customId === 'first_page') {
 
@@ -103,7 +105,7 @@ module.exports.run = async (client, message, args, guild) => {
                             queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, strings[guild.language].songRequestedBy.replace('%REQUESTER%', serverQueue.songs[i].requesterUsertag))
                         }
         
-                        queueEmbed.setFooter(strings[guild.language].pageNumber.replace('%PAGENUM%', Math.ceil(firstSongInPage / 6)).replace('%TOTALPAGECOUNT%', Math.ceil(totalSongsQuotient)))
+                        queueEmbed.setFooter(queueEmbed.footer.text.replace('%PAGENUM%', Math.ceil(firstSongInPage / 6)).replace('%TOTALPAGECOUNT%', Math.ceil(totalSongsQuotient)))
         
                         await int.update({ embeds: [queueEmbed], components: [row] });
 
@@ -127,7 +129,7 @@ module.exports.run = async (client, message, args, guild) => {
                             queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, strings[guild.language].songRequestedBy.replace('%REQUESTER%', serverQueue.songs[i].requesterUsertag))
                         }
 
-                        queueEmbed.setFooter(strings[guild.language].pageNumber.replace('%PAGENUM%', Math.ceil(firstSongInPage / 6)).replace('%TOTALPAGECOUNT%', Math.ceil(totalSongsQuotient)))
+                        queueEmbed.setFooter(queueEmbed.footer.text.replace('%PAGENUM%', Math.ceil(firstSongInPage / 6)).replace('%TOTALPAGECOUNT%', Math.ceil(totalSongsQuotient)))
 
                         await int.update({ embeds: [queueEmbed], components: [row] });
 
@@ -158,7 +160,35 @@ module.exports.run = async (client, message, args, guild) => {
         }
     }
 
-    async function nowPlaying(queue, message) {
+    function formatTime(totalSeconds) {
+
+        let hoursUnit = Math.floor((totalSeconds / 60) / 60)
+        let minutesUnit = Math.floor((totalSeconds - (3600 * hoursUnit)) / 60)
+        let secondsUnit = Math.round((totalSeconds - (3600 * hoursUnit)) - (60 * minutesUnit))
+    
+    
+        if (hoursUnit.toString().length == 1) {
+            hoursUnit = '0' + hoursUnit;
+        }
+    
+        if (minutesUnit.toString().length == 1) {
+            minutesUnit = '0' + minutesUnit;
+        }
+    
+        if (secondsUnit.toString().length == 1) {
+            secondsUnit = '0' + secondsUnit;
+        }
+    
+        if (hoursUnit == '00') {
+            formattedTime = minutesUnit + ':' + secondsUnit;
+        } else {
+            formattedTime = hoursUnit + ':' + minutesUnit + ':' + secondsUnit;
+        }
+
+        return formattedTime;
+    }
+
+    function nowPlaying(queue, message) {
 
         if (queue.loop) {
             loopStatus = '🟢';
@@ -204,30 +234,9 @@ module.exports.run = async (client, message, args, guild) => {
             totalSecondsSincePlay = (currentTime - queue.songs[0].timeAtPlay) / 1000;
         }
     
-        let hoursSincePlay = Math.floor((totalSecondsSincePlay / 60) / 60)
-        let minutesSincePlay = Math.floor((totalSecondsSincePlay - (3600 * hoursSincePlay)) / 60)
-        let secondsSincePlay = Math.round((totalSecondsSincePlay - (3600 * hoursSincePlay)) - (60 * minutesSincePlay))
+        const timeSincePlay = formatTime(totalSecondsSincePlay);
     
-    
-        if (hoursSincePlay.toString().length == 1) {
-            hoursSincePlay = '0' + hoursSincePlay
-        }
-    
-        if (minutesSincePlay.toString().length == 1) {
-            minutesSincePlay = '0' + minutesSincePlay
-        }
-    
-        if (secondsSincePlay.toString().length == 1) {
-            secondsSincePlay = '0' + secondsSincePlay
-        }
-    
-        if (hoursSincePlay == '00') {
-            timeSincePlay = minutesSincePlay + ':' + secondsSincePlay;
-        } else {
-            timeSincePlay = hoursSincePlay + ':' + minutesSincePlay + ':' + secondsSincePlay;
-        }
-    
-        let scrubber = `--------------------------------`
+        let scrubber = `--------------------------------`;
     
         const fractionPlayed = totalSecondsSincePlay / queue.songs[0].durationSeconds;
     
@@ -237,23 +246,27 @@ module.exports.run = async (client, message, args, guild) => {
         
         const timeBar = `${timeSincePlay} ${scrubber} ${queue.songs[0].duration}`
 
-        const totalPages = Math.ceil((queue.songs.length - 1) / 6)?
-            Math.ceil((queue.songs.length - 1) / 6):
-            1;
+        let queueLengthSeconds = 0;
+        
+        for (const song of queue.songs) {
+            queueLengthSeconds += song.durationSeconds;
+        }
+
+        const queueLength = formatTime(queueLengthSeconds);
 
         const queueEmbed = new client.discordjs.MessageEmbed()
             .setTitle(strings[guild.language].queueName.replace('%NAME%', message.guild.name))
             .setDescription(`Loop: ${loopStatus} | Shuffle: ${shuffleStatus}`)
             .addField(`**${strings[guild.language].songNowPlaying}:**`, `${strings[guild.language].songRequestedBy.replace('%REQUESTER%', serverQueue.songs[0].requesterUsertag)}\n\`\`\`nim\n${queue.songs[0].title.replaceAll(`\\||`, `||`)}\n\n${timeBar}\n\`\`\``)
             .setColor(65453)
-            .setFooter(strings[guild.language].pageNumber.replace('%PAGENUM%', 1).replace('%TOTALPAGECOUNT%', totalPages))
+            .setFooter(`${strings[guild.language].pageNumber} ∙ ${strings[guild.language].queueLength.replace('%LENGTH%', queueLength)}`)
 
         return queueEmbed;
     }
 
-    async function firstPage(int) {
+    function firstPage(int) {
 
-        queueEmbed = await nowPlaying(serverQueue, message);
+        queueEmbed = nowPlaying(serverQueue, message);
 
         const totalSongs = serverQueue.songs.length - 1;
         const totalSongsQuotient = totalSongs / 6;
@@ -262,14 +275,14 @@ module.exports.run = async (client, message, args, guild) => {
             queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, strings[guild.language].songRequestedBy.replace('%REQUESTER%', serverQueue.songs[i].requesterUsertag))
         }
 
-        queueEmbed.setFooter(strings[guild.language].pageNumber.replace('%PAGENUM%', 1).replace('%TOTALPAGECOUNT%', Math.ceil(totalSongsQuotient)))
+        queueEmbed.setFooter(queueEmbed.footer.text.replace('%PAGENUM%', 1).replace('%TOTALPAGECOUNT%', Math.ceil(totalSongsQuotient)))
 
-        return await int.update({ embeds: [queueEmbed], components: [row] });
+        return int.update({ embeds: [queueEmbed], components: [row] });
     }
 
-    async function lastPage(int) {
+    function lastPage(int) {
 
-        queueEmbed = await nowPlaying(serverQueue, message);
+        queueEmbed = nowPlaying(serverQueue, message);
 
         const totalSongs = serverQueue.songs.length - 1;
         const totalSongsQuotient = totalSongs / 6;
@@ -279,9 +292,9 @@ module.exports.run = async (client, message, args, guild) => {
             queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, strings[guild.language].songRequestedBy.replace('%REQUESTER%', serverQueue.songs[i].requesterUsertag))
         }
 
-        queueEmbed.setFooter(strings[guild.language].pageNumber.replace('%PAGENUM%', Math.ceil(totalSongsQuotient)).replace('%TOTALPAGECOUNT%', Math.ceil(totalSongsQuotient)))
+        queueEmbed.setFooter(queueEmbed.footer.text.replace('%PAGENUM%', Math.ceil(totalSongsQuotient)).replace('%TOTALPAGECOUNT%', Math.ceil(totalSongsQuotient)))
 
-        return await int.update({ embeds: [queueEmbed], components: [row] });
+        return int.update({ embeds: [queueEmbed], components: [row] });
     }
 }
 

@@ -22,10 +22,12 @@
         "2.2 - 29/12/21": [
             "El mensaje de 'canción añadida a la cola' ahora muestra a qué posición fue añadida",
             "Se ha retirado el límite de 100 canciones al añadir contenido de Spotify",
+            "Ahora se muestra el nombre y el icon del contenido cargado de Spotify",
             "Los links de artistas de Spotify ahora son compatibles, se cargarán las canciones más populares",
             "Los links de Spotify que empiezan por `/user/<username>` ahora son compatibles",
             "Añadidos mensajes de error para cuando no se encuentra contenido en Spotify",
             "Se han limitado los embeds del comando `lyrics`a 5",
+            "El comando `queue` ahora muestra la duración total de la cola",
             "Los vídeos con restricción de edad de YouTube ahora son compatibles",
             "Ahora los errors se manejan y son informados mejor",
             "El lenguaje ha sido mejorado",
