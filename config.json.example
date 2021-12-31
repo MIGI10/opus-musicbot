@@ -1,0 +1,15 @@
+{
+    "prefix":"o!",
+    "version":"",
+    "botToken":"",
+    "botOwnerID":"",
+    "spotifyClientId":"",
+    "spotifyClientSecret":"",
+    "mongoIP":"",
+    "mongoPort":"",
+    "mongoDatabase":"",
+    "informChannel":"",
+    "geniusToken":"",
+    "youtubeCookie":"",
+    "identityToken":""
+}
