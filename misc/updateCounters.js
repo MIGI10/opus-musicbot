@@ -15,18 +15,11 @@ module.exports = async (client) => {
 
         let memberCount = 0;
 
-        let i = 0;
-
         guilds.forEach((guild) => {
-
             memberCount += guild.memberCount;
-
-            if (i >= guilds.size) {
-                serversChannel.setName(serversChannelName.replace(/[0-9]+/g, guilds.size));
-                membersChannel.setName(membersChannelName.replace(/[0-9]+/g, memberCount));
-            }
-
-            i++
         })
+
+        serversChannel.setName(serversChannelName.replace(/[0-9]+/g, guilds.size));
+        membersChannel.setName(membersChannelName.replace(/[0-9]+/g, memberCount));
     }
 }
