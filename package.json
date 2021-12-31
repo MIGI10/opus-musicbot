@@ -26,6 +26,7 @@
     "genius-lyrics": "^4.3.4",
     "libsodium-wrappers": "^0.7.9",
     "mongoose": "^6.0.3",
+    "node-worker-threads-pool": "^1.5.1",
     "path": "^0.12.7",
     "youtube-dl-exec": "^1.2.5",
     "youtube-search-api": "https://github.com/MIGI10/youtube-search-api/tarball/main",
