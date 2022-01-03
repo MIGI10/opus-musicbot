@@ -38,6 +38,15 @@ module.exports = async (client, message) => {
 
     if (!cmd) return;
 
+    if (!message.channel.permissionsFor(client.user.id).has('SEND_MESSAGES')) {
+
+        message.author.createDM().then(channel => {
+            channel.send(strings['spa'].botUnableToReply + '\n' + strings['eng'].botUnableToReply)
+                .catch(err => null);
+        });
+        return;
+    }
+
     const guild = await client.db.guild.findOne({
         id: message.guild.id,
     }).catch(err => console.log(err));
@@ -45,8 +54,6 @@ module.exports = async (client, message) => {
     if (!guild && cmd.info.name !== 'config') {
         return message.channel.send(strings['spa'].guildNotConfigured.replace('%PREFIX%', client.prefix) + '\n' + strings['eng'].guildNotConfigured.replace('%PREFIX%', client.prefix));
     }
-
-    if (!message.guild.me.permissions.has(["SEND_MESSAGES"]) && !message.channel.permissionsFor(message.member).has('SEND_MESSAGES', false)) return;
 
     const isMod = message.member.roles.cache.has(client.config.modRoleID);
 

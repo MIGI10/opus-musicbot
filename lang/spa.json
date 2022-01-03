@@ -1,5 +1,6 @@
 {
     "guildNotConfigured": "No he sido configurado todavía, un usuario con permisos debe ejecutar `%PREFIX%config`",
+    "botUnableToReply": "¡No puedo contestarte, necesito el permiso `ENVIAR MENSAJES` en ese canal! Informa al staff del servidor acerca de este problema.",
     "setupMsg": "¡Gracias por invitarme a **%GUILDNAME%**!\n\nAntes de reproducir temazos, necesito que envíes por aquí la ID del rol de moderadores (los usuarios con este rol podrán utilizar `%PREFIX%clear` y `%PREFIX%forceskip` sin restricción aunque haya más de una persona conectada). En caso de no saber copiar la ID del rol, consulta este artículo: <https://docs.discordsafe.com/docs/ayuda/copiar-ids>",
     "setupComplete": "¡Configurado con éxito! Ejecuta %PREFIX%help para ver mis comandos",
     "setupInvalidRole": "Esa ID no corresponde a un rol del servidor, asegúrate de haber copiado correctamente la ID y vuelve a ejecutar el comando",

@@ -1,5 +1,6 @@
 {
     "guildNotConfigured": "I have not been set up yet, a user with enough permissions has to execute `%PREFIX%config`",
+    "botUnableToReply": "I cannot reply to you, I am missing the `SEND MESSAGES` permission in that channel! Inform the server staff about this problem.",
     "setupMsg": "Thank you for inviting me to **%GUILDNAME%**!\n\nBefore playing some jams, I need you to send through this channel the moderation role ID (users with this role will be allowed to use `%PREFIX%clear` and `%PREFIX%forceskip` without restriction). If you don't know how to get the role ID, refer to this article: <https://www.paycord.biz/post/how-to-get-a-role-id-in-discord>",
     "setupComplete": "Setup has been completed! Execute %PREFIX%help to view my commands.",
     "setupInvalidRole": "The ID provided does not match any role on this server, please make sure you have copied the ID correctly and run the command again",
