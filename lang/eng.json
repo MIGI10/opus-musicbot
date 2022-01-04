@@ -18,7 +18,7 @@
     "userMustSpecifySongToQueue": "You must specify a song to enqueue it!",
     "botConnectingToVoice": "Connecting to <#%VOICECHANNELID%>, I will now only respond to commands executed here.",
     "botNeedsPermsToConnect": "ERROR: I need `VIEW CHANNEL`, `CONNECT` and `SPEAK` permissions to work correctly!",
-    "botCouldNotQueue": "ERROR: Unable to queue song due to an unexpected error, you can report this error by sending me a DM message and providing me this error code: `%ERRORCODE%`",
+    "botCouldNotQueue": "ERROR: Unable to queue song due to an unexpected error, please try again, you can report this error by sending me a DM message and providing me this error code: `%ERRORCODE%`",
     "botCouldNotQueueSpotify": "ERROR: Unable to queue song(s) from Spotify due to an unexpected error, you can report this error by sending me a DM message and providing me this error code: `%ERRORCODE%`",
     "botCouldNotPlaySong": "ERROR: Unable to play song due to an unexpected error, you can report this error by sending me a DM message and providing me this error code: `%ERRORCODE%`",
     "botCouldNotPlayFlaggedSong": "This song cannot be played due to being flagged as highly sensitive content, we're working to remove this limitation. Error code: `%ERRORCODE%`",

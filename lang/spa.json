@@ -18,7 +18,7 @@
     "userMustSpecifySongToQueue": "¡Debes especificar una canción para añadirla a la cola!",
     "botConnectingToVoice": "Conectando a <#%VOICECHANNELID%>, ahora solo responderé comandos ejecutados aquí",
     "botNeedsPermsToConnect": "ERROR: Necesito el permiso de `VER CANAL`, `CONECTAR` y `HABLAR` para funcionar correctamente!",
-    "botCouldNotQueue": "ERROR: No se ha podido añadir la canción a la cola debido a un error interno, puedes reportar este error enviándome un mensaje privado y proporcionando el siguiente código de error: `%ERRORCODE%`",
+    "botCouldNotQueue": "ERROR: No se ha podido añadir la canción a la cola debido a un error interno, inténtalo de nuevo, puedes reportar este error enviándome un mensaje privado y proporcionando el siguiente código de error: `%ERRORCODE%`",
     "botCouldNotQueueSpotify": "ERROR: No se ha podido cargar el contenido de Spotify debido a un error interno, puedes reportar este error enviándome un mensaje privado y proporcionando el siguiente código de error: `%ERRORCODE%`",
     "botCouldNotPlaySong": "ERROR: No se ha podido reproducir la canción debido a un error, puedes reportar este error enviándome un mensaje privado y proporcionando el siguiente código de error: `%ERRORCODE%`",
     "botCouldNotPlayFlaggedSong": "No se ha podido reproducir la canción debido a que esta está marcada como contenido altamente sensible, estamos trabajando para retirar esta limitación. Código de error: `%ERRORCODE%`",

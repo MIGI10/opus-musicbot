@@ -191,7 +191,11 @@ module.exports.run = async (client, message, args, guild) => {
 
         if (!argsJoined.includes('http:') && !argsJoined.includes('https:') && !argsJoined.includes('www.') && !argsJoined.includes('open.') && !argsJoined.includes('youtube.')) {
 
-            const queueSong = await queue(argsJoined, message.author.id, message.author.tag);
+            const queueSong = await queue(argsJoined, message.author.id, message.author.tag)
+                .catch(err => {
+                    let errorCode = logError(err, '11', message, guild, serverQueue);
+                    return message.channel.send(strings[guild.language].botCouldNotQueue.replace('%ERRORCODE%', errorCode));
+                });
             if (!serverQueue.songs[0] || !queueSong) return;
 
             const newSong = serverQueue.songs[serverQueue.songs.length - 1];
@@ -232,9 +236,15 @@ module.exports.run = async (client, message, args, guild) => {
                         if (typeof song === 'string') {
                             
                             if (i == 1) {
-                                await queue(song, message.author.id, message.author.tag, i);
+                                await queue(song, message.author.id, message.author.tag, i)
+                                    .catch(err => {
+                                        logError(err, '12', message, guild, serverQueue);
+                                });
                             } else {
-                                queue(song, message.author.id, message.author.tag, i);
+                                queue(song, message.author.id, message.author.tag, i)
+                                    .catch(err => {
+                                        logError(err, '12', message, guild, serverQueue);
+                                    });
                             }
     
                             if (i == songs.length) {
@@ -286,7 +296,11 @@ module.exports.run = async (client, message, args, guild) => {
 
                 } else if (songs.type == 'track') {
 
-                    await queue(songs[0], message.author.id, message.author.tag);
+                    await queue(songs[0], message.author.id, message.author.tag)
+                        .catch(err => {
+                            let errorCode = logError(err, '13', message, guild, serverQueue);
+                            return message.channel.send(strings[guild.language].botCouldNotQueue.replace('%ERRORCODE%', errorCode));
+                        });
 
                     const newSong = serverQueue.songs[serverQueue.songs.length - 1];
 
@@ -314,7 +328,11 @@ module.exports.run = async (client, message, args, guild) => {
                     
                     videoId = videoId.split('&')[0];
 
-                    const queueSong = await queue(videoId, message.author.id, message.author.tag);
+                    const queueSong = await queue(videoId, message.author.id, message.author.tag)
+                                                .catch(err => {
+                                                    let errorCode = logError(err, '14', message, guild, serverQueue);
+                                                    return message.channel.send(strings[guild.language].botCouldNotQueue.replace('%ERRORCODE%', errorCode));
+                                                });
 
                     if (!serverQueue.songs[0] || !queueSong) return;
                     
