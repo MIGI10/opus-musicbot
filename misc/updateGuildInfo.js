@@ -15,23 +15,31 @@ module.exports = async (client) => {
 
                 const guildInfo = client.guilds.cache.get(guild.id);
 
-                const owner = await guildInfo.fetchOwner();
+                if (!guildInfo) {
 
-                guild.updateOne(
-                    { $set: {
-                        name: guildInfo.name,
-                        memberCount: guildInfo.memberCount,
-                        ownerId: guildInfo.ownerId,
-                        ownerTag: owner.user.tag,
-                        isPartnered: guildInfo.partnered,
-                        isVerified: guildInfo.verified,
-                        boostCount: guildInfo.premiumSubscriptionCount,
-                        description: guildInfo.description,
-                    }}, (error) => {
-                    if (error) console.log(error);
-                });
+                    console.log(`--- Found unknown guild in database: ${guild.id} - ${guild.name} ---`);
+                }
+                else {
 
-                await guild.save().catch(err => console.log(err));
+                    const owner = await guildInfo.fetchOwner();
+
+                    guild.updateOne(
+                        { $set: {
+                            name: guildInfo.name,
+                            memberCount: guildInfo.memberCount,
+                            ownerId: guildInfo.ownerId,
+                            ownerTag: owner.user.tag,
+                            isPartnered: guildInfo.partnered,
+                            isVerified: guildInfo.verified,
+                            boostCount: guildInfo.premiumSubscriptionCount,
+                            description: guildInfo.description,
+                        }}, (error) => {
+                            if (error) console.log(error);
+                        }
+                    );
+    
+                    await guild.save().catch(err => console.log(err));
+                }
 
             }, i * 3000);
 
