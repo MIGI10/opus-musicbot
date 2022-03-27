@@ -353,49 +353,19 @@ module.exports.run = async (client, message, args, guild) => {
 
     async function queue(songName, requesterId, requesterUsertag, position) {
 
-        const videoList = await youtubeSearch.GetListByKeyword(songName, false);
+        if(ytdl.validateID(songName)) {
 
-        let i = 0;
-        video = videoList.items[0];
+            let videoInfo = await ytdl.getBasicInfo('https://www.youtube.com/watch?v=' + songName);
 
-        while (!videoList.items[i] || videoList.items[i].type !== 'video' || videoList.items[i].isLive || !videoList.items[i].length.simpleText) {
-            video = videoList.items[i + 1];
-            i++;
+            totalDurationSeconds = parseInt(videoInfo.player_response.videoDetails.lengthSeconds);
+            videoTitle = videoInfo.player_response.videoDetails.title;
+            videoId = songName;
 
-            if (!video) {
-                break
-            }
-        }
-
-        if (!video) {
-
-            if (!serverQueue.updating) {
-                serverQueue.textChannel.send(strings[guild.language].songNotFound.replace('%SONGNAME%', songName))
-            }
-            return
-        }
-
-        const length = video.length.simpleText;
-        let durationArray = length.split(':');
-        durationArray = durationArray.map(Number);
-
-        let totalDurationSeconds = 0;
-
-        if (durationArray.length == 3) {
-
-            let durationHours = durationArray[0];
-            let durationMins = durationArray[1];
-            let durationSeconds = durationArray[2];
-
-            const hoursToSeconds = durationHours * 3600;
-            totalDurationSeconds += hoursToSeconds;
-
-            const minutesToSeconds = durationMins * 60;
-            totalDurationSeconds += minutesToSeconds;
-
-            totalDurationSeconds += durationSeconds;
-
-            if (durationHours.toString().length == '1') {
+            let durationHours = Math.floor(totalDurationSeconds / 3600);
+            let durationMins = Math.floor((totalDurationSeconds % 3600) / 60);
+            let durationSeconds = Math.round((totalDurationSeconds % 3600) % 60);
+            
+            if (durationHours && durationHours.toString().length == '1') {
                 durationHours = '0' + durationHours
             }
             if (durationMins.toString().length == '1') {
@@ -405,36 +375,98 @@ module.exports.run = async (client, message, args, guild) => {
                 durationSeconds = '0' + durationSeconds
             }
 
-            duration = durationHours + ':' + durationMins + ':' + durationSeconds;
+            duration = durationHours ? 
+                durationHours + ':' + durationMins + ':' + durationSeconds:
+                durationMins + ':' + durationSeconds;
+        }
+        else {
 
-        } else {
+            const videoList = await youtubeSearch.GetListByKeyword(songName, false);
 
-            let durationMins = durationArray[0];
-            let durationSeconds = durationArray[1];
-
-            const minutesToSeconds = durationMins * 60;
-            totalDurationSeconds += minutesToSeconds;
-
-            totalDurationSeconds += durationSeconds;
-
-            if (durationMins.toString().length == '1') {
-                durationMins = '0' + durationMins
-            }  
-            if (durationSeconds.toString().length == '1') {
-                durationSeconds = '0' + durationSeconds
+            let i = 0;
+            let video = videoList.items[0];
+    
+            while (!videoList.items[i] || videoList.items[i].type !== 'video' || videoList.items[i].isLive || !videoList.items[i].length.simpleText) {
+                video = videoList.items[i + 1];
+                i++;
+    
+                if (!video) {
+                    break
+                }
             }
-
-            duration = durationMins + ':' + durationSeconds;
+    
+            if (!video) {
+    
+                if (!serverQueue.updating) {
+                    serverQueue.textChannel.send(strings[guild.language].songNotFound.replace('%SONGNAME%', songName))
+                }
+                return
+            }
+    
+            videoId = video.id;
+            videoTitle = video.title;
+    
+            let length = video.length.simpleText;
+            let durationArray = length.split(':');
+            durationArray = durationArray.map(Number);
+    
+            totalDurationSeconds = 0;
+    
+            if (durationArray.length == 3) {
+    
+                let durationHours = durationArray[0];
+                let durationMins = durationArray[1];
+                let durationSeconds = durationArray[2];
+    
+                const hoursToSeconds = durationHours * 3600;
+                totalDurationSeconds += hoursToSeconds;
+    
+                const minutesToSeconds = durationMins * 60;
+                totalDurationSeconds += minutesToSeconds;
+    
+                totalDurationSeconds += durationSeconds;
+    
+                if (durationHours.toString().length == '1') {
+                    durationHours = '0' + durationHours
+                }
+                if (durationMins.toString().length == '1') {
+                    durationMins = '0' + durationMins
+                }  
+                if (durationSeconds.toString().length == '1') {
+                    durationSeconds = '0' + durationSeconds
+                }
+    
+                duration = durationHours + ':' + durationMins + ':' + durationSeconds;
+    
+            } else {
+    
+                let durationMins = durationArray[0];
+                let durationSeconds = durationArray[1];
+    
+                const minutesToSeconds = durationMins * 60;
+                totalDurationSeconds += minutesToSeconds;
+    
+                totalDurationSeconds += durationSeconds;
+    
+                if (durationMins.toString().length == '1') {
+                    durationMins = '0' + durationMins
+                }  
+                if (durationSeconds.toString().length == '1') {
+                    durationSeconds = '0' + durationSeconds
+                }
+    
+                duration = durationMins + ':' + durationSeconds;
+            }
         }
 
         const song = {
-            title: video.title.replaceAll(`||`, `\\||`),
+            title: videoTitle.replaceAll(`||`, `\\||`),
             duration: duration,
             durationSeconds: totalDurationSeconds,
             position: position,
             timeAtPlay: null,
             pauseTimestamps: [],
-            url: 'https://www.youtube.com/watch?v=' + video.id,
+            url: 'https://www.youtube.com/watch?v=' + videoId,
             requesterId: requesterId,
             requesterUsertag: requesterUsertag
         };
