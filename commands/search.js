@@ -1,6 +1,4 @@
 const youtubeSearch = require('youtube-search-api');
-const fs = require("fs");
-const path = require('path');
 
 module.exports.run = async (client, message, args, guild) => {
 
@@ -9,23 +7,6 @@ module.exports.run = async (client, message, args, guild) => {
     args = args.join(' ');
 
     const videoList = await youtubeSearch.GetListByKeyword(args, false);
-
-    const writeStream = fs.createWriteStream(path.join(
-        __dirname,
-        "..",
-        "searches",
-        `${new Date().toISOString()}.log`
-    ));
-
-    for (const vid of videoList.items) {
-        writeStream.write(`${JSON.stringify(vid, null, 4)}\n`)
-    }
-
-    writeStream.on('error', (err) => {
-        console.error(err)
-    });
-
-    writeStream.end();
 
     let embedList = '';
 
