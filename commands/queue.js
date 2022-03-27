@@ -74,9 +74,7 @@ module.exports.run = async (client, message, args, guild) => {
 
             const msg = await message.channel.send({ embeds: [queueEmbed], components: [row]});
 
-            const filter = i => i.member.voice.channel && i.member.voice.channel == serverQueue.voiceChannel;
-
-            const collector = message.channel.createMessageComponentCollector({ filter, time: 60000 });
+            const collector = message.channel.createMessageComponentCollector({ time: 60000 });
 
             collector.on('collect', async int => {
 
@@ -162,10 +160,9 @@ module.exports.run = async (client, message, args, guild) => {
 
     function formatTime(totalSeconds) {
 
-        let hoursUnit = Math.floor((totalSeconds / 60) / 60)
-        let minutesUnit = Math.floor((totalSeconds - (3600 * hoursUnit)) / 60)
-        let secondsUnit = Math.round((totalSeconds - (3600 * hoursUnit)) - (60 * minutesUnit))
-    
+        let hoursUnit = Math.floor(totalSeconds / 3600);
+        let minutesUnit = Math.floor((totalSeconds % 3600) / 60);
+        let secondsUnit = Math.round((totalSeconds % 3600) % 60);
     
         if (hoursUnit.toString().length == 1) {
             hoursUnit = '0' + hoursUnit;
