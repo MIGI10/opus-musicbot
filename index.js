@@ -2,7 +2,19 @@ const Discord = require('discord.js');
 const voice = require('@discordjs/voice');
 const db = require("mongoose");
 const Genius = require("genius-lyrics");
-const { DynamicPool } = require('node-worker-threads-pool'); 
+const { DynamicPool, StaticPool } = require('node-worker-threads-pool'); 
+const path = require('path');
+const Piscina = require('piscina');
+
+const piscina = new Piscina({
+  filename: path.resolve(__dirname, './lib/test.js')
+});
+
+const threadPool = new StaticPool({
+  size: 4,
+  task: path.resolve(__dirname, './lib/test.js'),
+  workerData: 'workerData!'
+});
 
 const config = require('./config.json');
 
@@ -17,7 +29,7 @@ const client = new Discord.Client({ intents: [
 
 const geniusClient = new Genius.Client(config.geniusToken);
 
-const threadPool = new DynamicPool(8);
+//const threadPool = new DynamicPool(8);
 
 const engStrings = require('./lang/eng.json');
 const spaStrings = require('./lang/spa.json');
@@ -41,6 +53,7 @@ client.discordjs = Discord;
 client.discordjsvoice = voice;
 client.geniusapi = geniusClient;
 client.threadPool = threadPool;
+client.piscina = piscina;
 
 const queue = new Map();
 client.queue = queue;

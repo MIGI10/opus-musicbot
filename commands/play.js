@@ -122,7 +122,15 @@ module.exports.run = async (client, message, args, guild) => {
                 return message.channel.send(strings[guild.language].botCouldNotQueue.replace('%ERRORCODE%', errorCode));
             });
         */
-        
+
+        /*
+        await client.piscina.run(client, message, args, serverQueue, guild)
+            .catch(err => {
+                let errorCode = logError(err, '10', message, guild, serverQueue);
+                return message.channel.send(strings[guild.language].botCouldNotQueue.replace('%ERRORCODE%', errorCode));
+            });
+        */
+
         try {
             var connection = client.discordjsvoice.joinVoiceChannel({
                 channelId: voiceChannel.id,
