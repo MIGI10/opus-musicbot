@@ -17,7 +17,8 @@ module.exports = async (client) => {
 
                 if (!guildInfo) {
 
-                    console.log(`--- Found unknown guild in database: ${guild.id} - ${guild.name} ---`);
+                    console.log(`--- Removing unknown guild from database: ${guild.id} - ${guild.name} ---`);
+                    await guild.deleteOne();
                 }
                 else {
 
