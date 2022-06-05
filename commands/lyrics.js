@@ -43,7 +43,7 @@ module.exports.run = async (client, message, args, guild) => {
 
             const lyricsEmbed = i == 0 ?
                 new client.discordjs.MessageEmbed()
-                    .setAuthor(`Lyrics "${songName}"`, client.user.displayAvatarURL({dynamic: true, size: 1024}))
+                    .setAuthor({ name: `Lyrics "${songName}"`, iconURL: client.user.displayAvatarURL({dynamic: true, size: 1024})})
                     .setDescription(embedContents)
                     .setColor(65453):
                 new client.discordjs.MessageEmbed()
@@ -59,7 +59,7 @@ module.exports.run = async (client, message, args, guild) => {
     } else {
 
         const lyricsEmbed = new client.discordjs.MessageEmbed()
-        .setAuthor(`Lyrics "${songName}"`, client.user.displayAvatarURL({dynamic: true, size: 1024}))
+        .setAuthor({ name: `Lyrics "${songName}"`, iconURL: client.user.displayAvatarURL({dynamic: true, size: 1024})})
         .setDescription(lyrics)
         .setColor(65453)
 

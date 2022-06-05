@@ -34,9 +34,9 @@ module.exports.run = async (client, message, args, guild) => {
     }
 
     const videoListEmbed = new client.discordjs.MessageEmbed()
-    .setAuthor(`${strings[guild.language].searchResults} "${args}"`, client.user.displayAvatarURL({dynamic: true, size: 1024}))
+    .setAuthor({ name: `${strings[guild.language].searchResults} "${args}"`, iconURL: client.user.displayAvatarURL({dynamic: true, size: 1024})})
     .setDescription(embedList)
-    .setFooter(strings[guild.language].searchHowToPlay.replace('%PREFIX%', client.prefix))
+    .setFooter({ text: strings[guild.language].searchHowToPlay.replace('%PREFIX%', client.prefix)})
     .setColor(65453)
 
     message.channel.send({ embeds: [videoListEmbed]});

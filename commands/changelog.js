@@ -6,7 +6,7 @@ module.exports.run = async (client, message, args, guild) => {
     const changelogEmbed = new client.discordjs.MessageEmbed()
         .setTitle(`Changelog | Opus Music Bot`)
         .setColor(65453)
-        .setFooter(`Opus Music Bot v${client.config.version} · ${strings[guild.language].botDevelopedBy}`, client.user.displayAvatarURL({dynamic: true, size: 1024}))
+        .setFooter({ text: `Opus Music Bot v${client.config.version} · ${strings[guild.language].botDevelopedBy}`, iconURL: client.user.displayAvatarURL({dynamic: true, size: 1024})})
 
     if (guild.language == 'spa') {
         changelog = spaChangelog;

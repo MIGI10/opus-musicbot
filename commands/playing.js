@@ -99,7 +99,7 @@ module.exports.run = async (client, message, args, guild) => {
         .setTitle(strings[guild.language].songNowPlaying)
         .setDescription(`${strings[guild.language].songRequestedBy.replace('%REQUESTER%', serverQueue.songs[0].requesterUsertag)}\n\`\`\`nim\n${serverQueue.songs[0].title.replaceAll(`\\||`, `||`)}\n\n${timeBar}\n\`\`\``)
         .setColor(65453)
-        .setFooter(`Loop: ${loopStatus} | Shuffle: ${shuffleStatus}`)
+        .setFooter({ text: `Loop: ${loopStatus} | Shuffle: ${shuffleStatus}`})
     
     message.channel.send({ embeds: [nowPlayingEmbed]})
 }
