@@ -59,7 +59,7 @@ module.exports.run = async (client, interaction, guild) => {
 
         const totalPages = Math.ceil((serverQueue.songs.length - 1) / 6);
 
-        queueEmbed.setFooter(queueEmbed.footer.text.replace('%PAGENUM%', 1).replace('%TOTALPAGECOUNT%', totalPages != 0 ? totalPages : 1));
+        queueEmbed.setFooter({ text: queueEmbed.footer.text.replace('%PAGENUM%', 1).replace('%TOTALPAGECOUNT%', totalPages != 0 ? totalPages : 1)});
 
         if (totalPages === 0) {
 
@@ -103,7 +103,7 @@ module.exports.run = async (client, interaction, guild) => {
                             queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, strings[guild.language].songRequestedBy.replace('%REQUESTER%', serverQueue.songs[i].requesterUsertag))
                         }
         
-                        queueEmbed.setFooter(queueEmbed.footer.text.replace('%PAGENUM%', Math.ceil(firstSongInPage / 6)).replace('%TOTALPAGECOUNT%', Math.ceil(totalSongsQuotient)))
+                        queueEmbed.setFooter({ text: queueEmbed.footer.text.replace('%PAGENUM%', Math.ceil(firstSongInPage / 6)).replace('%TOTALPAGECOUNT%', Math.ceil(totalSongsQuotient))})
         
                         await int.update({ embeds: [queueEmbed], components: [row] });
 
@@ -127,7 +127,7 @@ module.exports.run = async (client, interaction, guild) => {
                             queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, strings[guild.language].songRequestedBy.replace('%REQUESTER%', serverQueue.songs[i].requesterUsertag))
                         }
 
-                        queueEmbed.setFooter(queueEmbed.footer.text.replace('%PAGENUM%', Math.ceil(firstSongInPage / 6)).replace('%TOTALPAGECOUNT%', Math.ceil(totalSongsQuotient)))
+                        queueEmbed.setFooter({ text: queueEmbed.footer.text.replace('%PAGENUM%', Math.ceil(firstSongInPage / 6)).replace('%TOTALPAGECOUNT%', Math.ceil(totalSongsQuotient))})
 
                         await int.update({ embeds: [queueEmbed], components: [row] });
 
@@ -256,7 +256,7 @@ module.exports.run = async (client, interaction, guild) => {
             .setDescription(`Loop: ${loopStatus} | Shuffle: ${shuffleStatus}`)
             .addField(`**${strings[guild.language].songNowPlaying}:**`, `${strings[guild.language].songRequestedBy.replace('%REQUESTER%', serverQueue.songs[0].requesterUsertag)}\n\`\`\`nim\n${queue.songs[0].title.replaceAll(`\\||`, `||`)}\n\n${timeBar}\n\`\`\``)
             .setColor(65453)
-            .setFooter(`${strings[guild.language].pageNumber} ∙ ${strings[guild.language].queueLength.replace('%LENGTH%', queueLength)}`)
+            .setFooter({ text: `${strings[guild.language].pageNumber} ∙ ${strings[guild.language].queueLength.replace('%LENGTH%', queueLength)}`})
 
         return queueEmbed;
     }
@@ -272,7 +272,7 @@ module.exports.run = async (client, interaction, guild) => {
             queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, strings[guild.language].songRequestedBy.replace('%REQUESTER%', serverQueue.songs[i].requesterUsertag))
         }
 
-        queueEmbed.setFooter(queueEmbed.footer.text.replace('%PAGENUM%', 1).replace('%TOTALPAGECOUNT%', Math.ceil(totalSongsQuotient)))
+        queueEmbed.setFooter({ text: queueEmbed.footer.text.replace('%PAGENUM%', 1).replace('%TOTALPAGECOUNT%', Math.ceil(totalSongsQuotient))})
 
         return int.update({ embeds: [queueEmbed], components: [row] });
     }
@@ -289,7 +289,7 @@ module.exports.run = async (client, interaction, guild) => {
             queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, strings[guild.language].songRequestedBy.replace('%REQUESTER%', serverQueue.songs[i].requesterUsertag))
         }
 
-        queueEmbed.setFooter(queueEmbed.footer.text.replace('%PAGENUM%', Math.ceil(totalSongsQuotient)).replace('%TOTALPAGECOUNT%', Math.ceil(totalSongsQuotient)))
+        queueEmbed.setFooter({ text: queueEmbed.footer.text.replace('%PAGENUM%', Math.ceil(totalSongsQuotient)).replace('%TOTALPAGECOUNT%', Math.ceil(totalSongsQuotient))})
 
         return int.update({ embeds: [queueEmbed], components: [row] });
     }

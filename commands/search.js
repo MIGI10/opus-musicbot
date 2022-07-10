@@ -34,9 +34,9 @@ module.exports.run = async (client, interaction, guild) => {
     }
 
     const videoListEmbed = new client.discordjs.MessageEmbed()
-    .setAuthor(`${strings[guild.language].searchResults} "${args}"`, client.user.displayAvatarURL({dynamic: true, size: 1024}))
+    .setAuthor({ name: `${strings[guild.language].searchResults} "${args}"`, iconURL: client.user.displayAvatarURL({dynamic: true, size: 1024})})
     .setDescription(embedList)
-    .setFooter(strings[guild.language].searchHowToPlay)
+    .setFooter({ text: strings[guild.language].searchHowToPlay})
     .setColor(65453)
 
     interaction.reply({ embeds: [videoListEmbed]});

@@ -256,7 +256,7 @@ module.exports.run = async (client, interaction, guild) => {
                 if (songs.type == 'playlist' || songs.type == 'album' || songs.type == 'artist') {
 
                     let queuedEmbed = new client.discordjs.MessageEmbed()
-                        .setAuthor(strings[guild.language].songsBeingQueued, 'https://i.gifer.com/origin/6a/6af36f7b9c1ac8a7e9d7dbcaa479b616.gif')
+                        .setAuthor({ name: strings[guild.language].songsBeingQueued, iconURL: 'https://i.gifer.com/origin/6a/6af36f7b9c1ac8a7e9d7dbcaa479b616.gif'})
                         .setColor(65453)
                         .setDescription('\n\n' + strings[guild.language].songsLoading.replace('%SONGCOUNT%', songs.length))
 
@@ -321,7 +321,7 @@ module.exports.run = async (client, interaction, guild) => {
 
                                     queuedEmbed = new client.discordjs.MessageEmbed()
                                         .setDescription(strings[guild.language].songsQueued.replace('%SONGCOUNT%', i - 1).replace('%CONTENTNAME%', songs.contentName))
-                                        .setAuthor(songs.contentName, songs.contentIcon)
+                                        .setAuthor({ name: songs.contentName, iconURL: songs.contentIcon})
                                         .setColor(65453);
 
                                     if (!queuedMsg) {
@@ -604,9 +604,9 @@ module.exports.run = async (client, interaction, guild) => {
         if (!error) {
 
             const nowPlayingEmbed = new client.discordjs.MessageEmbed()
-            .setAuthor(strings[guild.language].songNowPlaying, client.user.displayAvatarURL({dynamic: true, size: 1024}))
+            .setAuthor({ name: strings[guild.language].songNowPlaying, iconURL: client.user.displayAvatarURL({dynamic: true, size: 1024})})
             .setTitle(`${song.title} [${song.duration}]`)
-            .setFooter(strings[guild.language].songRequestedBy.replace('%REQUESTER%', song.requesterUsertag))
+            .setFooter({ text: strings[guild.language].songRequestedBy.replace('%REQUESTER%', song.requesterUsertag)})
             .setURL(song.url)
             .setColor(65453)
 

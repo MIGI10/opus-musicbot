@@ -12,7 +12,7 @@ module.exports.run = (client, interaction, guild) => {
             .setTitle(`Command Help | Opus Music Bot`)
             .setDescription(strings[guild.language].helpCommandHelp.replace('%NAME%', cmdArg).replace('%DESC%', description).replace('%USAGE%', usage))
             .setColor(65453)
-            .setFooter(`Opus Music Bot v${client.config.version} · ${strings[guild.language].botDevelopedBy}`, client.user.displayAvatarURL({dynamic: true, size: 1024}));
+            .setFooter({ text: `Opus Music Bot v${client.config.version} · ${strings[guild.language].botDevelopedBy}`, iconURL: client.user.displayAvatarURL({dynamic: true, size: 1024})})
         
         interaction.reply({ embeds: [commandEmbed]});
     
@@ -36,7 +36,7 @@ module.exports.run = (client, interaction, guild) => {
             .addField('Changelog', strings[guild.language].helpChangelogField)
             .addField('Invite Link', strings[guild.language].helpInviteField)
             .addField('Support', strings[guild.language].helpSupportField.replace('%BOTID%', client.user.id))
-            .setFooter(`Opus Music Bot v${client.config.version} · ${strings[guild.language].botDevelopedBy}`, client.user.displayAvatarURL({dynamic: true, size: 1024}));
+            .setFooter({ text: `Opus Music Bot v${client.config.version} · ${strings[guild.language].botDevelopedBy}`, iconURL: client.user.displayAvatarURL({dynamic: true, size: 1024})})
         
         interaction.reply({ embeds: [helpEmbed]});
     }
