@@ -1,21 +1,21 @@
-module.exports.run = async (client, message, args, guild) => {
+module.exports.run = async (client, interaction, guild) => {
 
-    if (!client.queue.get(message.guild.id) || !client.queue.get(message.guild.id).connection) {
-        return message.reply(strings[guild.language].botNotInUse);
+    if (!client.queue.get(interaction.guildId) || !client.queue.get(interaction.guildId).connection) {
+        return interaction.reply(strings[guild.language].botNotInUse);
     }
 
-    const serverQueue = client.queue.get(message.guild.id);
+    const serverQueue = client.queue.get(interaction.guildId);
 
-    if (message.channel !== serverQueue.textChannel) {
-        return message.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id).replace('%PREFIX%', client.prefix));
+    if (interaction.channel !== serverQueue.textChannel) {
+        return interaction.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id));
     }
 
-    if (!message.member.voice.channel || message.member.voice.channel !== serverQueue.voiceChannel) {
-        return message.reply(strings[guild.language].userNotConnectedToSameVoice);
+    if (!interaction.member.voice.channel || interaction.member.voice.channel !== serverQueue.voiceChannel) {
+        return interaction.reply(strings[guild.language].userNotConnectedToSameVoice);
     }
 
     if (!serverQueue.songs[0]) {
-        return message.reply(strings[guild.language].botNothingPlaying);
+        return interaction.reply(strings[guild.language].botNothingPlaying);
     }
 
     if (serverQueue.loop) {
@@ -101,13 +101,12 @@ module.exports.run = async (client, message, args, guild) => {
         .setColor(65453)
         .setFooter(`Loop: ${loopStatus} | Shuffle: ${shuffleStatus}`)
     
-    message.channel.send({ embeds: [nowPlayingEmbed]})
+    interaction.reply({ embeds: [nowPlayingEmbed]})
 }
 
-module.exports.info = {
-    name: "playing",
-    alias: "np"
-}
+module.exports.data = new SlashCommandBuilder()
+    .setName('playing')
+    .setDescription(strings['eng'].playingHelpDescription)
 
 module.exports.requirements = {
     userPerms: [],

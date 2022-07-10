@@ -1,4 +1,4 @@
-module.exports.run = async (client, message, args, guild) => {
+module.exports.run = async (client, interaction, guild) => {
 
     const dbGuilds = await client.db.guild.find();  
 
@@ -9,13 +9,12 @@ module.exports.run = async (client, message, args, guild) => {
         .addField('Active Players', `${client.queue.size}`)
         .setColor(65453)
 
-    message.channel.send({ embeds: [statsEmbed]});
+    interaction.reply({ embeds: [statsEmbed]});
 }
 
-module.exports.info = {
-    name: "stats",
-    alias: ""
-}
+module.exports.data = new SlashCommandBuilder()
+    .setName('stats')
+    .setDescription('Show bot stats.')
 
 module.exports.requirements = {
     userPerms: [],

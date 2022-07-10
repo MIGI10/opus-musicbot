@@ -1,53 +1,47 @@
-const ytdl = require('ytdl-core');
-const youtubedl = require('youtube-dl-exec').raw;
-
-module.exports.run = async (client, message, args, guild) => {
+module.exports.run = async (client, interaction, guild) => {
 
     voice = client.discordjsvoice
 
-    if (!client.queue.get(message.guild.id) || !client.queue.get(message.guild.id).connection) {
-        return message.reply(strings[guild.language].botNotInUse);
+    if (!client.queue.get(interaction.guildId) || !client.queue.get(interaction.guildId).connection) {
+        return interaction.reply(strings[guild.language].botNotInUse);
     }
 
-    const serverQueue = client.queue.get(message.guild.id);
+    const serverQueue = client.queue.get(interaction.guildId);
 
-    if (message.channel !== serverQueue.textChannel) {
-        return message.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id).replace('%PREFIX%', client.prefix));
+    if (interaction.channel !== serverQueue.textChannel) {
+        return interaction.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id));
     }
 
-    if (!message.member.voice.channel || message.member.voice.channel != serverQueue.voiceChannel) {
-        return message.reply(strings[guild.language].userNotConnectedToSameVoice)
+    if (!interaction.member.voice.channel || interaction.member.voice.channel != serverQueue.voiceChannel) {
+        return interaction.reply(strings[guild.language].userNotConnectedToSameVoice)
     }
 
     if (!serverQueue.playing) {
-        return message.reply(strings[guild.language].botPlayerStopped)
+        return interaction.reply(strings[guild.language].botPlayerStopped)
     }
 
     if (serverQueue.updating) {
-        return message.reply(strings[guild.language].botIsUpdating2)
-            .then(msg => setTimeout(() => { 
-                msg.delete(); 
-                message.delete()
+        return interaction.reply(strings[guild.language].botIsUpdating2)
+            .then(setTimeout(() => { 
+                interaction.deleteReply()
                 .catch((err) => null);
             }, 5000))
     }
 
     const nowPlaying = serverQueue.songs[0];
 
-    if (!message.member.roles.cache.has(guild.modRoleId) && message.author.id != nowPlaying.requesterId) {
-        return message.reply(strings[guild.language].forceskipNotAllowed.replace('%PREFIX%', client.prefix).replace('%REQUESTER%', nowPlaying.requesterUsertag));
+    if (!interaction.member.roles.cache.has(guild.modRoleId) && interaction.user.id != nowPlaying.requesterId) {
+        return interaction.reply(strings[guild.language].forceskipNotAllowed.replace('%REQUESTER%', nowPlaying.requesterUsertag));
     }
 
-    message.react('👌')
-    .catch((err) => null);
+    interaction.reply(strings[guild.language].skippedSong);
     
     serverQueue.player.stop(true);
 }
 
-module.exports.info = {
-    name: "forceskip",
-    alias: "fs"
-}
+module.exports.data = new SlashCommandBuilder()
+    .setName('forceskip')
+    .setDescription(strings['eng'].forceskipHelpDescription)
 
 module.exports.requirements = {
     userPerms: [],

@@ -1,8 +1,8 @@
 const youtubeSearch = require('youtube-search-api');
 
-module.exports.run = async (client, message, args, guild) => {
+module.exports.run = async (client, interaction, guild) => {
 
-    if (!args[0]) return message.reply(strings[guild.language].userMustSpecifySong)
+    if (!args[0]) return interaction.reply(strings[guild.language].userMustSpecifySong)
 
     args = args.join(' ');
 
@@ -36,16 +36,20 @@ module.exports.run = async (client, message, args, guild) => {
     const videoListEmbed = new client.discordjs.MessageEmbed()
     .setAuthor(`${strings[guild.language].searchResults} "${args}"`, client.user.displayAvatarURL({dynamic: true, size: 1024}))
     .setDescription(embedList)
-    .setFooter(strings[guild.language].searchHowToPlay.replace('%PREFIX%', client.prefix))
+    .setFooter(strings[guild.language].searchHowToPlay)
     .setColor(65453)
 
-    message.channel.send({ embeds: [videoListEmbed]});
+    interaction.reply({ embeds: [videoListEmbed]});
 }
 
-module.exports.info = {
-    name: "search",
-    alias: ""
-}
+module.exports.data = new SlashCommandBuilder()
+    .setName('search')
+    .setDescription(strings['eng'].searchHelpDescription)
+    .addStringOption(option =>
+        option.setName('song')
+            .setRequired(true)
+            .setDescription('Specify a song name to search.')
+    )
 
 module.exports.requirements = {
     userPerms: [],

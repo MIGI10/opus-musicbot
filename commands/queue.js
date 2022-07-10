@@ -1,23 +1,22 @@
-module.exports.run = async (client, message, args, guild) => {
+module.exports.run = async (client, interaction, guild) => {
 
     const MessageActionRow = client.discordjs.MessageActionRow;
     const MessageButton = client.discordjs.MessageButton;
 
-    if (!client.queue.get(message.guild.id) || !client.queue.get(message.guild.id).connection) {
-        return message.reply(strings[guild.language].botNotInUse);
+    if (!client.queue.get(interaction.guildId) || !client.queue.get(interaction.guildId).connection) {
+        return interaction.reply(strings[guild.language].botNotInUse);
     }
 
-    const serverQueue = client.queue.get(message.guild.id);
+    const serverQueue = client.queue.get(interaction.guildId);
 
-    if (message.channel !== serverQueue.textChannel) {
-        return message.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id).replace('%PREFIX%', client.prefix))
+    if (interaction.channel !== serverQueue.textChannel) {
+        return interaction.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id));
     }
 
     if (serverQueue.updating) {
-        return message.reply(strings[guild.language].botIsUpdating2)
-            .then(msg => setTimeout(() => { 
-                msg.delete(); 
-                message.delete()
+        return interaction.reply(strings[guild.language].botIsUpdating2)
+            .then(setTimeout(() => { 
+                interaction.deleteReply()
                 .catch((err) => null);
             }, 5000))
     }
@@ -52,11 +51,11 @@ module.exports.run = async (client, message, args, guild) => {
 
     if (!serverQueue.songs[0]) {
 
-        message.reply(strings[guild.language].botNoQueuedSongs);
+        interaction.reply(strings[guild.language].botNoQueuedSongs);
 
     } else {
 
-        let queueEmbed = nowPlaying(serverQueue, message);
+        let queueEmbed = nowPlaying(serverQueue, interaction);
 
         const totalPages = Math.ceil((serverQueue.songs.length - 1) / 6);
 
@@ -64,7 +63,7 @@ module.exports.run = async (client, message, args, guild) => {
 
         if (totalPages === 0) {
 
-            message.channel.send({ embeds: [queueEmbed]});
+            interaction.reply({ embeds: [queueEmbed]});
 
         } else {
 
@@ -72,9 +71,10 @@ module.exports.run = async (client, message, args, guild) => {
                 queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, strings[guild.language].songRequestedBy.replace('%REQUESTER%', serverQueue.songs[i].requesterUsertag))
             }
 
-            const msg = await message.channel.send({ embeds: [queueEmbed], components: [row]});
+            interaction.reply({ embeds: [queueEmbed], components: [row]});
+            const msg = await interaction.fetchReply();
 
-            const collector = message.channel.createMessageComponentCollector({ time: 60000 });
+            const collector = interaction.channel.createMessageComponentCollector({ time: 60000 });
 
             collector.on('collect', async int => {
 
@@ -97,7 +97,7 @@ module.exports.run = async (client, message, args, guild) => {
 
                     if (firstSongInPage > 0) {
 
-                        queueEmbed = await nowPlaying(serverQueue, message);
+                        queueEmbed = await nowPlaying(serverQueue, interaction);
 
                         for (let i = firstSongInPage; (firstSongInPage + 5) >= i && totalSongs >= i; i++) {
                             queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, strings[guild.language].songRequestedBy.replace('%REQUESTER%', serverQueue.songs[i].requesterUsertag))
@@ -121,7 +121,7 @@ module.exports.run = async (client, message, args, guild) => {
 
                     if (firstSongInPage <= totalSongs) {
                         
-                        queueEmbed = await nowPlaying(serverQueue, message);
+                        queueEmbed = await nowPlaying(serverQueue, interaction);
 
                         for (let i = firstSongInPage; (firstSongInPage + 5) >= i && totalSongs >= i; i++) {
                             queueEmbed.addField(`${i}. ${serverQueue.songs[i].title} [${serverQueue.songs[i].duration}]`, strings[guild.language].songRequestedBy.replace('%REQUESTER%', serverQueue.songs[i].requesterUsertag))
@@ -153,7 +153,7 @@ module.exports.run = async (client, message, args, guild) => {
                     lastPageButton
                 );
 
-                msg.edit({ components: [row] });
+                interaction.editReply({ components: [row] });
             });
         }
     }
@@ -185,7 +185,7 @@ module.exports.run = async (client, message, args, guild) => {
         return formattedTime;
     }
 
-    function nowPlaying(queue, message) {
+    function nowPlaying(queue, interaction) {
 
         if (queue.loop) {
             loopStatus = '🟢';
@@ -252,7 +252,7 @@ module.exports.run = async (client, message, args, guild) => {
         const queueLength = formatTime(queueLengthSeconds);
 
         const queueEmbed = new client.discordjs.MessageEmbed()
-            .setTitle(strings[guild.language].queueName.replace('%NAME%', message.guild.name))
+            .setTitle(strings[guild.language].queueName.replace('%NAME%', interaction.guild.name))
             .setDescription(`Loop: ${loopStatus} | Shuffle: ${shuffleStatus}`)
             .addField(`**${strings[guild.language].songNowPlaying}:**`, `${strings[guild.language].songRequestedBy.replace('%REQUESTER%', serverQueue.songs[0].requesterUsertag)}\n\`\`\`nim\n${queue.songs[0].title.replaceAll(`\\||`, `||`)}\n\n${timeBar}\n\`\`\``)
             .setColor(65453)
@@ -263,7 +263,7 @@ module.exports.run = async (client, message, args, guild) => {
 
     function firstPage(int) {
 
-        queueEmbed = nowPlaying(serverQueue, message);
+        queueEmbed = nowPlaying(serverQueue, interaction);
 
         const totalSongs = serverQueue.songs.length - 1;
         const totalSongsQuotient = totalSongs / 6;
@@ -279,7 +279,7 @@ module.exports.run = async (client, message, args, guild) => {
 
     function lastPage(int) {
 
-        queueEmbed = nowPlaying(serverQueue, message);
+        queueEmbed = nowPlaying(serverQueue, interaction);
 
         const totalSongs = serverQueue.songs.length - 1;
         const totalSongsQuotient = totalSongs / 6;
@@ -295,10 +295,9 @@ module.exports.run = async (client, message, args, guild) => {
     }
 }
 
-module.exports.info = {
-    name: "queue",
-    alias: "q"
-}
+module.exports.data = new SlashCommandBuilder()
+    .setName('queue')
+    .setDescription(strings['eng'].queueHelpDescription)
 
 module.exports.requirements = {
     userPerms: [],

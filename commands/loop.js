@@ -1,36 +1,35 @@
-module.exports.run = (client, message, args, guild) => {
+module.exports.run = (client, interaction, guild) => {
 
-    if (!client.queue.get(message.guild.id) || !client.queue.get(message.guild.id).connection) {
-        return message.reply(strings[guild.language].botNotInUse);
+    if (!client.queue.get(interaction.guildId) || !client.queue.get(interaction.guildId).connection) {
+        return interaction.reply(strings[guild.language].botNotInUse);
     }
 
-    const serverQueue = client.queue.get(message.guild.id);
+    const serverQueue = client.queue.get(interaction.guildId);
 
-    if (message.channel !== serverQueue.textChannel) {
-        return message.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id).replace('%PREFIX%', client.prefix));
+    if (interaction.channel !== serverQueue.textChannel) {
+        return interaction.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id));
     }
 
-    if (!message.member.voice.channel || message.member.voice.channel !== serverQueue.voiceChannel) {
-        return message.reply(strings[guild.language].userNotConnectedToSameVoice)
+    if (!interaction.member.voice.channel || interaction.member.voice.channel !== serverQueue.voiceChannel) {
+        return interaction.reply(strings[guild.language].userNotConnectedToSameVoice)
     }
 
     if (!serverQueue.songs[0]) {
-        return message.reply(strings[guild.language].botPlayerSopped)
+        return interaction.reply(strings[guild.language].botPlayerSopped)
     }
 
     if (serverQueue.loop) {
         serverQueue.loop = false;
-        return message.channel.send(strings[guild.language].loopDisabled)
+        return interaction.reply(strings[guild.language].loopDisabled)
     } else {
         serverQueue.loop = true;
-        return message.channel.send(strings[guild.language].loopEnabled.replace('%SONGNAME%', serverQueue.songs[0].title).replace('%SONGDURATION%', serverQueue.songs[0].duration))
+        return interaction.reply(strings[guild.language].loopEnabled.replace('%SONGNAME%', serverQueue.songs[0].title).replace('%SONGDURATION%', serverQueue.songs[0].duration))
     }
 }
 
-module.exports.info = {
-    name: "loop",
-    alias: "lo"
-}
+module.exports.data = new SlashCommandBuilder()
+    .setName('loop')
+    .setDescription(strings['eng'].loopHelpDescription)
 
 module.exports.requirements = {
     userPerms: [],

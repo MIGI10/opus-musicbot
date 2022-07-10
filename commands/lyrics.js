@@ -1,19 +1,23 @@
-module.exports.run = async (client, message, args, guild) => {
+module.exports.run = async (client, interaction, guild) => {
 
-    const serverQueue = client.queue.get(message.guild.id);
+    const serverQueue = client.queue.get(interaction.guildId);
 
-    if (args[0]) {
-        var songName = args.join(' ');
-    } else {
-        if (serverQueue) {
-            var songName = serverQueue.songs[0] ? 
-                serverQueue.songs[0].title:
-                undefined
-        }
+    const songArg = interaction.options.getString('song');
+
+    var songName;
+
+    if (songArg) {
+        songName = songArg;
+    } 
+    else if (serverQueue && serverQueue.songs[0]) {
+        songName = serverQueue.songs[0].title;
+    }
+    else {
+        songName = null;
     }
 
     if (!songName) {
-        return message.reply(strings[guild.language].userMustSpecifySongLyrics);
+        return interaction.reply(strings[guild.language].userMustSpecifySongLyrics);
     }
 
     const searches = await client.geniusapi.songs.search(songName);
@@ -21,7 +25,7 @@ module.exports.run = async (client, message, args, guild) => {
     const firstSong = searches[0];
 
     if (!firstSong) {
-        return message.reply(strings[guild.language].noLyricsFound.replace("%SONGNAME%", songName));
+        return interaction.reply(strings[guild.language].noLyricsFound.replace("%SONGNAME%", songName));
     }
 
     const lyrics = await firstSong.lyrics();
@@ -50,7 +54,14 @@ module.exports.run = async (client, message, args, guild) => {
                     .setDescription(embedContents)
                     .setColor(65453)
             
-            message.channel.send({ embeds: [lyricsEmbed]})
+            if (interaction.replied) {
+
+                interaction.channel.send({ embeds: [lyricsEmbed]});
+            }
+            else {
+
+                interaction.reply({ embeds: [lyricsEmbed]});
+            }
 
             embedContents = '';
             i++;
@@ -63,14 +74,18 @@ module.exports.run = async (client, message, args, guild) => {
         .setDescription(lyrics)
         .setColor(65453)
 
-        message.channel.send({ embeds: [lyricsEmbed]})
+        interaction.reply({ embeds: [lyricsEmbed]})
     }
 }
 
-module.exports.info = {
-    name: "lyrics",
-    alias: "ly"
-}
+module.exports.data = new SlashCommandBuilder()
+    .setName('lyrics')
+    .setDescription(strings['eng'].lyricsHelpDescription)
+    .addStringOption(option =>
+        option.setName('song')
+            .setRequired(false)
+            .setDescription('Specify a song to show its lyrics.')
+    )
 
 module.exports.requirements = {
     userPerms: [],

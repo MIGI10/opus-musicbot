@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require('path');
 const util = require('util');
 
-module.exports = (error, internalCode, message, guild, queue) => {
+module.exports = (error, internalCode, interaction, guild, queue) => {
 
     let errorCode = `${internalCode}-${Math.floor(Math.random()*1000)}`;
     const errorHeader = `--------- Internal error ${errorCode} ---------`;
@@ -18,6 +18,7 @@ module.exports = (error, internalCode, message, guild, queue) => {
         `${new Date().getFullYear()}`,
         `${new Date().getMonth() + 1}`,
         `${new Date().getDate()}`,
+        ""
     );
 
     if (!fs.existsSync(directory)){
@@ -25,8 +26,8 @@ module.exports = (error, internalCode, message, guild, queue) => {
     }
 
     fs.writeFileSync(
-        `${directory}/${errorCode}_${date.slice(-8)}.log`,
-        `${errorHeader}\n${date}\n\n${util.inspect(error)}\n\nMessage: ${message}\n\n${guild}\n\n${util.inspect(queue)}`
+        `${directory}/${errorCode}_${date.slice(-8).replace(/ /g,'')}.log`,
+        `${errorHeader}\n${date}\n\n${util.inspect(error)}\n\nInteraction: ${interaction}\n\n${guild}\n\n${util.inspect(queue)}`
     )
 
     return errorCode;

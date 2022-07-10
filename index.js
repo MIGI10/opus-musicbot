@@ -2,8 +2,8 @@ const Discord = require('discord.js');
 const voice = require('@discordjs/voice');
 const db = require("mongoose");
 const Genius = require("genius-lyrics");
-
 const config = require('./config.json');
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
 const client = new Discord.Client({ intents: [
     Discord.Intents.FLAGS.GUILDS,
@@ -26,6 +26,8 @@ strings['spa'] = spaStrings;
 
 global.strings = strings;
 
+global.SlashCommandBuilder = SlashCommandBuilder;
+
 const logError = require('./helpers/logError');
 global.logError = logError;
 
@@ -33,7 +35,6 @@ client.prefix = config.prefix;
 client.config = config;
 client.db = db;
 client.commands = new Discord.Collection();
-client.cmdaliases = new Discord.Collection();
 client.discordjs = Discord;
 client.discordjsvoice = voice;
 client.geniusapi = geniusClient;

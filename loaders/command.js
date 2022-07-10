@@ -10,10 +10,8 @@ module.exports.run = (client) => {
         delete require.cache[commandPath];
         const command = require(commandPath);
 
-        client.commands.set(command.info.name, command);
-        if (command.info.alias) {
-            client.cmdaliases.set(command.info.alias, command);
-        }
+        const cmdName = cmd.split('.')[0];
+        client.commands.set(cmdName, command);
     }
-    console.log(`Loaded ${client.commands.size} commands and ${client.cmdaliases.size} aliases!`);
+    console.log(`Loaded ${client.commands.size} commands!`);
 }

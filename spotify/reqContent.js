@@ -1,15 +1,11 @@
 const fetch = require('node-fetch');
 const reqAuth = require('./reqAuthorization');
 
-module.exports = async (client, message, args, guild) => {
+module.exports = async (client, interaction, args, guild) => {
 
-    if (args[1] && !isNaN(args[1])) {
-        var offset = parseInt(args[1]);
-    } else {
-        var offset = 0;
-    }
+    offset = interaction.options.getInteger('offset');
+    reverse = interaction.options.getBoolean('reverse');
 
-    args = args.join(' ');
     const urlArray = args.split('/');
 
     let songs = [];
@@ -22,15 +18,33 @@ module.exports = async (client, message, args, guild) => {
         var query = await getPlaylist(spotifyId);
 
         if (query == 'private') {
-            return message.reply(strings[guild.language].playlistPrivate);
+
+            if (!interaction.replied) {
+                return interaction.reply(strings[guild.language].playlistPrivate);
+            }
+            else {
+                return interaction.channel.send(strings[guild.language].playlistPrivate);
+            }
         }
 
         if (query == 'not found') {
-            return message.reply(strings[guild.language].playlistNotFound);
+
+            if (!interaction.replied) {
+                return interaction.reply(strings[guild.language].playlistNotFound);
+            }
+            else {
+                return interaction.channel.send(strings[guild.language].playlistNotFound);
+            }
         }
 
         if (offset > query.tracks.total) {
-            return message.reply(strings[guild.language].playlistInvalidOffset);
+
+            if (!interaction.replied) {
+                return interaction.reply(strings[guild.language].playlistInvalidOffset);
+            }
+            else {
+                return interaction.channel.send(strings[guild.language].playlistInvalidOffset);
+            }
         }
 
         if (offset) {
@@ -39,12 +53,12 @@ module.exports = async (client, message, args, guild) => {
             query.tracks.total -= offset - 1; 
         }
 
-        if (args.includes('reverse')) {
+        if (reverse) {
 
             if (offset) {
-                message.channel.send(strings[guild.language].playlistOffsetReverse.replace('%OFFSET%', offset));
+                interaction.channel.send(strings[guild.language].playlistOffsetReverse.replace('%OFFSET%', offset));
             } else {
-                message.channel.send(strings[guild.language].playlistReverse);
+                interaction.channel.send(strings[guild.language].playlistReverse);
             }
 
             for (let i = query.tracks.items.length - 1; i >= 0; i--) {
@@ -57,7 +71,7 @@ module.exports = async (client, message, args, guild) => {
         } else {
 
             if (offset) {
-                message.channel.send(strings[guild.language].playlistOffset.replace('%OFFSET%', offset));
+                interaction.channel.send(strings[guild.language].playlistOffset.replace('%OFFSET%', offset));
             }
 
             for (const item of query.tracks.items) {
@@ -84,7 +98,13 @@ module.exports = async (client, message, args, guild) => {
         var query = await getTrack(spotifyId);
 
         if (query == 'not found') {
-            return message.reply(strings[guild.language].playlistNotFound);
+
+            if (!interaction.replied) {
+                return interaction.reply(strings[guild.language].playlistNotFound);
+            }
+            else {
+                return interaction.channel.send(strings[guild.language].playlistNotFound);
+            }
         }
 
         const songName = query.name + ' ' + query.artists[0].name;
@@ -102,11 +122,23 @@ module.exports = async (client, message, args, guild) => {
         var query = await getAlbum(spotifyId);
 
         if (query == 'not found') {
-            return message.reply(strings[guild.language].playlistNotFound);
+            
+            if (!interaction.replied) {
+                return interaction.reply(strings[guild.language].playlistNotFound);
+            }
+            else {
+                return interaction.channel.send(strings[guild.language].playlistNotFound);
+            }
         }
 
         if (offset > query.tracks.total) {
-            return message.reply(strings[guild.language].playlistInvalidOffset);
+
+            if (!interaction.replied) {
+                return interaction.reply(strings[guild.language].playlistInvalidOffset);
+            }
+            else {
+                return interaction.channel.send(strings[guild.language].playlistInvalidOffset);
+            }
         }
 
         if (offset) {
@@ -115,12 +147,12 @@ module.exports = async (client, message, args, guild) => {
             query.tracks.total -= offset - 1; 
         }
 
-        if (args.includes('reverse')) {
+        if (reverse) {
 
             if (offset) {
-                message.channel.send(strings[guild.language].playlistOffsetReverse.replace('%OFFSET%', offset));
+                interaction.channel.send(strings[guild.language].playlistOffsetReverse.replace('%OFFSET%', offset));
             } else {
-                message.channel.send(strings[guild.language].playlistReverse)
+                interaction.channel.send(strings[guild.language].playlistReverse)
             }
 
             for (let i = query.tracks.items.length - 1; i >= 0; i--) {
@@ -133,7 +165,7 @@ module.exports = async (client, message, args, guild) => {
         } else {
 
             if (offset) {
-                message.channel.send(strings[guild.language].playlistOffset.replace('%OFFSET%', offset))
+                interaction.channel.send(strings[guild.language].playlistOffset.replace('%OFFSET%', offset))
             }
 
             for (const item of query.tracks.items) {
@@ -160,7 +192,13 @@ module.exports = async (client, message, args, guild) => {
         var query = await getArtist(spotifyId);
     
         if (query == 'not found') {
-            return message.reply(strings[guild.language].spotifyNotFound);
+
+            if (!interaction.replied) {
+                return interaction.reply(strings[guild.language].spotifyNotFound);
+            }
+            else {
+                return interaction.channel.send(strings[guild.language].spotifyNotFound);
+            }
         }
 
         for (const track of query.tracks) {
@@ -179,9 +217,14 @@ module.exports = async (client, message, args, guild) => {
 
     } else if (urlArray.includes('episode') || urlArray.includes('show')) {
 
-        message.channel.send(strings[guild.language].podcastsNotCompatible);
-        songs.type = null;
+        if (!interaction.replied) {
+            interaction.reply(strings[guild.language].podcastsNotCompatible);
+        }
+        else {
+            interaction.channel.send(strings[guild.language].podcastsNotCompatible);
+        }
 
+        songs.type = null;
         return songs;
 
     } else {

@@ -1,15 +1,22 @@
+const regCommands = require('../register-commands.js');
 const loadCommands = require('../loaders/command');
 const loadEvents = require('../loaders/event');
 const { readdirSync } = require('fs');
 const { join } = require('path');
 const eventsFolder = join(__dirname, "..", "events");
 
-module.exports.run = async (client, message, args) => {
+module.exports.run = async (client, interaction) => {
+
+    if (interaction.options.getInteger('global') == 1) {
+        regCommands(true); 
+    }
+    else {
+        regCommands(false);
+    }
 
     delete require.cache['/usr/src/bot/spotify/reqContent.js'];
 
     await client.commands.clear();
-    await client.cmdaliases.clear();
 
     loadCommands.run(client);
 
@@ -29,13 +36,17 @@ module.exports.run = async (client, message, args) => {
     strings['eng'] = engStrings;
     strings['spa'] = spaStrings;
 
-    message.channel.send('Successfully reloaded commands, events, lang and spotify module!');
+    interaction.reply('Successfully reloaded commands, events, lang and spotify module!');
 }
 
-module.exports.info = {
-    name: "reload",
-    alias: ""
-}
+module.exports.data = new SlashCommandBuilder()
+    .setName('reload')
+    .setDescription('Reload commands, events, lang and spotify module.')
+    .addIntegerOption(option =>
+        option.setName('global')
+            .setRequired(true)
+            .setDescription('Refresh commands globally (1) or not (0).')
+    )
 
 module.exports.requirements = {
     userPerms: [],

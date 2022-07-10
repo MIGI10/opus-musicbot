@@ -13,7 +13,7 @@ module.exports = async (client) => {
 
     client.user.setPresence({
         activities: [{ 
-            name: `${client.prefix}help`,
+            name: `/help`,
             type: 'LISTENING'
         }],
         status: 'online'

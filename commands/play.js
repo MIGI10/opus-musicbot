@@ -3,12 +3,12 @@ const spotifyReq = require('../spotify/reqContent');
 const ytdl = require('ytdl-core');
 const youtubedl = require('youtube-dl-exec').raw;
 
-module.exports.run = async (client, message, args, guild) => {
+module.exports.run = async (client, interaction, guild) => {
 
     voice = client.discordjsvoice
 
-    if (!client.queue.get(message.guild.id)) { 
-        client.queue.set(message.guild.id, {
+    if (!client.queue.get(interaction.guildId)) { 
+        client.queue.set(interaction.guildId, {
             textChannel: null,
             voiceChannel: null,
             connection: null,
@@ -23,39 +23,60 @@ module.exports.run = async (client, message, args, guild) => {
         })
     }
 
-    const serverQueue = client.queue.get(message.guild.id);
+    const serverQueue = client.queue.get(interaction.guildId);
 
-    if (!message.member.voice.channel && !serverQueue.voiceChannel) {
-        client.queue.delete(message.guild.id);
-        return message.reply(strings[guild.language].userNotConnectedToVoice)
+    if (!interaction.member.voice.channel && !serverQueue.voiceChannel) {
+        client.queue.delete(interaction.guildId);
+        return interaction.reply(strings[guild.language].userNotConnectedToVoice);
+    }
+
+    const queryArg = interaction.options.getString('query');
+    const linkArg = interaction.options.getString('link');
+
+    if (queryArg) {
+        args = queryArg;
+        argsType = 'query';
+    }
+    else if (linkArg) {
+        args = linkArg;
+        argsType = 'link';
+    }
+    else {
+        args = null;
+        argsType = null;
     }
 
     if (serverQueue.voiceChannel) {
 
-        if (!message.member.voice.channel || message.member.voice.channel !== serverQueue.voiceChannel) {
-            return message.reply(strings[guild.language].userNotConnectedToSameVoice)
+        if (!interaction.member.voice.channel || interaction.member.voice.channel !== serverQueue.voiceChannel) {
+            return interaction.reply(strings[guild.language].userNotConnectedToSameVoice)
         }
 
-        if (message.channel !== serverQueue.textChannel) {
-            return message.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id).replace('%PREFIX%', client.prefix));
+        if (interaction.channel !== serverQueue.textChannel) {
+            return interaction.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id));
         }
 
         if (!serverQueue.playing) {
+
             if (!serverQueue.songs[0]) {
-                if (!args[0]) {
-                    return message.reply(strings[guild.language].userMustSpecifySongToStartPlayer)
-                } else {
+
+                if (!args) {
+
+                    return interaction.reply(strings[guild.language].userMustSpecifySongToStartPlayer)
+                } 
+                else {
+
                     clearTimeout(serverQueue.inactivity);
                     serverQueue.inactivity = null;
 
-                    await preQueue(args, message)
+                    await preQueue(interaction, args, argsType)
                         .catch(err => {
-                            let errorCode = logError(err, '10', message, guild, serverQueue);
-                            return message.channel.send(strings[guild.language].botCouldNotQueue.replace('%ERRORCODE%', errorCode));
+                            let errorCode = logError(err, '10', interaction, guild, serverQueue);
+                            return interaction.channel.send(strings[guild.language].botCouldNotQueue.replace('%ERRORCODE%', errorCode));
                         });
                     await play(serverQueue.songs[0], serverQueue, false)
                         .catch(err => {
-                            logError(err, '30', message, guild, serverQueue);
+                            logError(err, '30', interaction, guild, serverQueue);
                         });
 
                     return;
@@ -67,68 +88,68 @@ module.exports.run = async (client, message, args, guild) => {
                     serverQueue.songs[0].pauseTimestamps[serverQueue.songs[0].pauseTimestamps.length - 1].timeAtUnpause = Date.now();
                     serverQueue.playing = true;
 
-                    message.channel.send(strings[guild.language].botPlayerResumed)
+                    interaction.reply(strings[guild.language].botPlayerResumed)
             }
         } else {
 
-            if (!args[0]) {
-                return message.reply(strings[guild.language].userMustSpecifySongToQueue);
+            if (!args) {
+                return interaction.reply(strings[guild.language].userMustSpecifySongToQueue);
             } else {
-                return preQueue(args, message)
+                return preQueue(interaction, args, argsType)
                     .catch(err => {
-                        let errorCode = logError(err, '10', message, guild, serverQueue);
-                        return message.channel.send(strings[guild.language].botCouldNotQueue.replace('%ERRORCODE%', errorCode));
+                        let errorCode = logError(err, '10', interaction, guild, serverQueue);
+                        return interaction.channel.send(strings[guild.language].botCouldNotQueue.replace('%ERRORCODE%', errorCode));
                     });
             }
         }
     } else {
 
-        if (!args[0]) {
-            client.queue.delete(message.guild.id);
-            return message.reply(strings[guild.language].userMustSpecifySongToStartPlayer)
+        if (!args) {
+            client.queue.delete(interaction.guildId);
+            return interaction.reply(strings[guild.language].userMustSpecifySongToStartPlayer)
         }
 
-        const voiceChannel = message.member.voice.channel;
+        const voiceChannel = interaction.member.voice.channel;
         serverQueue.voiceChannel = voiceChannel;
 
-        const textChannel = message.channel;
+        const textChannel = interaction.channel;
         serverQueue.textChannel = textChannel;
 
-        message.channel.send(strings[guild.language].botConnectingToVoice.replace('%VOICECHANNELID%', voiceChannel.id));
+        interaction.reply(strings[guild.language].botConnectingToVoice.replace('%VOICECHANNELID%', voiceChannel.id));
 
-        const permissions = voiceChannel.permissionsFor(message.guild.me);
+        const permissions = voiceChannel.permissionsFor(interaction.guild.me);
         if (!permissions.has("VIEW_CHANNEL") || !permissions.has("CONNECT") || !permissions.has("SPEAK")) {
-            client.queue.delete(message.guild.id);
-            return message.channel.send(strings[guild.language].botNeedsPermsToConnect);
+            client.queue.delete(interaction.guildId);
+            return interaction.channel.send(strings[guild.language].botNeedsPermsToConnect);
         }
 
-        await preQueue(args, message)
+        await preQueue(interaction, args, argsType)
             .catch(err => {
-                let errorCode = logError(err, '10', message, guild, serverQueue);
-                return message.channel.send(strings[guild.language].botCouldNotQueue.replace('%ERRORCODE%', errorCode));
+                let errorCode = logError(err, '10', interaction, guild, serverQueue);
+                return interaction.channel.send(strings[guild.language].botCouldNotQueue.replace('%ERRORCODE%', errorCode));
             });
 
         try {
             var connection = voice.joinVoiceChannel({
                 channelId: voiceChannel.id,
-                guildId: message.guildId,
-                adapterCreator: message.guild.voiceAdapterCreator,
+                guildId: interaction.guildId,
+                adapterCreator: interaction.guild.voiceAdapterCreator,
             });
 
             serverQueue.connection = connection;
 
         } catch (err) {
 
-            client.queue.delete(message.guild.id);
+            client.queue.delete(interaction.guildId);
 
-            let errorCode = logError(err, '20', message, guild, serverQueue);
+            let errorCode = logError(err, '20', interaction, guild, serverQueue);
 
-            return message.channel.send(strings[guild.language].botCouldNotConnect).replace('%ERRORCODE%', errorCode);
+            return interaction.channel.send(strings[guild.language].botCouldNotConnect).replace('%ERRORCODE%', errorCode);
         }
 
         await play(serverQueue.songs[0], serverQueue, false)
             .catch(err => {
-                logError(err, '30', message, guild, serverQueue);
+                logError(err, '30', interaction, guild, serverQueue);
             });
 
         serverQueue.player.on("error", async (error) => {
@@ -164,7 +185,7 @@ module.exports.run = async (client, message, args, guild) => {
                     serverQueue.connection.destroy();
                 }
 
-                client.queue.delete(message.guild.id);
+                client.queue.delete(interaction.guildId);
 
                 return;
             }
@@ -176,26 +197,33 @@ module.exports.run = async (client, message, args, guild) => {
         });
     }
 
-    async function preQueue(args, message) {
+    async function preQueue(interaction, args, argsType) {
 
         if (serverQueue.updating) {
-            return message.reply(strings[guild.language].botIsUpdating)
-                        .then(msg => setTimeout(() => { 
-                            msg.delete(); 
-                            message.delete()
-                            .catch((err) => null);
-                        }, 5000))
+
+            if (!interaction.replied) {
+                return interaction.reply(strings[guild.language].botIsUpdating2);
+            }
+            else {
+                return interaction.channel.send(strings[guild.language].botIsUpdating2);
+            }
         }
 
-        const argsJoined = args.join(' ');
+        if (argsType == 'query') {
 
-        if (!argsJoined.includes('http:') && !argsJoined.includes('https:') && !argsJoined.includes('www.') && !argsJoined.includes('open.') && !argsJoined.includes('youtube.')) {
+            if (!interaction.replied) {
+                interaction.reply();
+            }
+            else {
+                interaction.channel.send();
+            }
 
-            const queueSong = await queue(argsJoined, message.author.id, message.author.tag)
+            const queueSong = await queue(args, interaction.user.id, interaction.user.tag)
                 .catch(err => {
-                    let errorCode = logError(err, '11', message, guild, serverQueue);
-                    return message.channel.send(strings[guild.language].botCouldNotQueue.replace('%ERRORCODE%', errorCode));
+                    let errorCode = logError(err, '11', interaction, guild, serverQueue);
+                    return interaction.channel.send(strings[guild.language].botCouldNotQueue.replace('%ERRORCODE%', errorCode));
                 });
+
             if (!serverQueue.songs[0] || !queueSong) return;
 
             const newSong = serverQueue.songs[serverQueue.songs.length - 1];
@@ -203,17 +231,22 @@ module.exports.run = async (client, message, args, guild) => {
             const queuedEmbed = new client.discordjs.MessageEmbed()
                 .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) ${strings[guild.language].songQueued.replace('%POSNUM%', serverQueue.songs.length - 1)}`)
                 .setColor(65453);
-
-            message.channel.send({ embeds: [queuedEmbed]});
-        
-        } else {
             
-            if (argsJoined.includes('open.spotify.com/')) {
+            if (!interaction.replied) {
+                interaction.reply({ embeds: [queuedEmbed]});
+            }
+            else {
+                interaction.channel.send({ embeds: [queuedEmbed]});
+            }
+        } 
+        else {
+            
+            if (args.includes('open.spotify.com/')) {
 
-                const songs = await spotifyReq(client, message, args, guild)
+                const songs = await spotifyReq(client, interaction, args, guild)
                     .catch(err => {
-                        let errorCode = logError(err, '15', message, guild, serverQueue);
-                        return message.channel.send(strings[guild.language].botCouldNotQueueSpotify.replace('%ERRORCODE%', errorCode));
+                        let errorCode = logError(err, '15', interaction, guild, serverQueue);
+                        return interaction.channel.send(strings[guild.language].botCouldNotQueueSpotify.replace('%ERRORCODE%', errorCode));
                     });
 
                 if (!songs.type) return;
@@ -227,7 +260,13 @@ module.exports.run = async (client, message, args, guild) => {
                         .setColor(65453)
                         .setDescription('\n\n' + strings[guild.language].songsLoading.replace('%SONGCOUNT%', songs.length))
 
-                    const queuedMsg = await message.channel.send({ embeds: [queuedEmbed]});
+                    if (!interaction.replied) {
+                        interaction.reply({ embeds: [queuedEmbed]});
+                        queuedMsg = null;
+                    }
+                    else {
+                        queuedMsg = await interaction.channel.send({ embeds: [queuedEmbed]});
+                    }
 
                     serverQueue.updating = true;
     
@@ -236,14 +275,14 @@ module.exports.run = async (client, message, args, guild) => {
                         if (typeof song === 'string') {
                             
                             if (i == 1) {
-                                await queue(song, message.author.id, message.author.tag, i)
+                                await queue(song, interaction.user.id, interaction.user.tag, i)
                                     .catch(err => {
-                                        logError(err, '12', message, guild, serverQueue);
+                                        logError(err, '12', interaction, guild, serverQueue);
                                 });
                             } else {
-                                queue(song, message.author.id, message.author.tag, i)
+                                queue(song, interaction.user.id, interaction.user.tag, i)
                                     .catch(err => {
-                                        logError(err, '12', message, guild, serverQueue);
+                                        logError(err, '12', interaction, guild, serverQueue);
                                     });
                             }
     
@@ -284,8 +323,13 @@ module.exports.run = async (client, message, args, guild) => {
                                         .setDescription(strings[guild.language].songsQueued.replace('%SONGCOUNT%', i - 1).replace('%CONTENTNAME%', songs.contentName))
                                         .setAuthor(songs.contentName, songs.contentIcon)
                                         .setColor(65453);
-                        
-                                    queuedMsg.edit({ embeds: [queuedEmbed]});
+
+                                    if (!queuedMsg) {
+                                        interaction.editReply({ embeds: [queuedEmbed]});
+                                    }
+                                    else {
+                                        queuedMsg.edit({ embeds: [queuedEmbed]});
+                                    }
 
                                 }, waitTime);
                             }
@@ -296,10 +340,10 @@ module.exports.run = async (client, message, args, guild) => {
 
                 } else if (songs.type == 'track') {
 
-                    await queue(songs[0], message.author.id, message.author.tag)
+                    await queue(songs[0], interaction.user.id, interaction.user.tag)
                         .catch(err => {
-                            let errorCode = logError(err, '13', message, guild, serverQueue);
-                            return message.channel.send(strings[guild.language].botCouldNotQueue.replace('%ERRORCODE%', errorCode));
+                            let errorCode = logError(err, '13', interaction, guild, serverQueue);
+                            return interaction.channel.send(strings[guild.language].botCouldNotQueue.replace('%ERRORCODE%', errorCode));
                         });
 
                     const newSong = serverQueue.songs[serverQueue.songs.length - 1];
@@ -307,31 +351,35 @@ module.exports.run = async (client, message, args, guild) => {
                     const queuedEmbed = new client.discordjs.MessageEmbed()
                         .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) ${strings[guild.language].songQueued.replace('%POSNUM%', serverQueue.songs.length - 1)}`)
                         .setColor(65453);
-        
-                    message.channel.send({ embeds: [queuedEmbed]});
+                    
+                    if (!interaction.replied) {
+                        interaction.reply({ embeds: [queuedEmbed]});
+                    }
+                    else {
+                        interaction.channel.send({ embeds: [queuedEmbed]});
+                    }
                 }
-            }
+            } 
+            else if (args.includes('youtube.com/') || args.includes('youtu.be/')) {
 
-            if (argsJoined.includes('youtube.com/') || argsJoined.includes('youtu.be/')) {
+                const urlArray = args.split('/');
 
-                const urlArray = argsJoined.split('/');
-
-                const urlType = argsJoined.includes('youtube.com/') ?
+                const urlType = args.includes('youtube.com/') ?
                     urlArray[3].split('?')[0]:
                     'watch';
 
                 if (urlType == 'watch') {
 
-                    let videoId = argsJoined.includes('youtube.com/') ?
+                    let videoId = args.includes('youtube.com/') ?
                         urlArray[3].split('=')[1]:
                         urlArray[3];
                     
                     videoId = videoId.split('&')[0];
 
-                    const queueSong = await queue(videoId, message.author.id, message.author.tag)
+                    const queueSong = await queue(videoId, interaction.user.id, interaction.user.tag)
                                                 .catch(err => {
-                                                    let errorCode = logError(err, '14', message, guild, serverQueue);
-                                                    return message.channel.send(strings[guild.language].botCouldNotQueue.replace('%ERRORCODE%', errorCode));
+                                                    let errorCode = logError(err, '14', interaction, guild, serverQueue);
+                                                    return interaction.channel.send(strings[guild.language].botCouldNotQueue.replace('%ERRORCODE%', errorCode));
                                                 });
 
                     if (!serverQueue.songs[0] || !queueSong) return;
@@ -342,11 +390,30 @@ module.exports.run = async (client, message, args, guild) => {
                     .setDescription(`[**${newSong.title} [${newSong.duration}]**](${newSong.url}) ${strings[guild.language].songQueued.replace('%POSNUM%', serverQueue.songs.length - 1)}`)
                     .setColor(65453)
         
-                    message.channel.send({ embeds: [queuedEmbed]});
+                    if (!interaction.replied) {
+                        interaction.reply({ embeds: [queuedEmbed]});
+                    }
+                    else {
+                        interaction.channel.send({ embeds: [queuedEmbed]});
+                    }
 
                 } else {
-                    return message.channel.send(strings[guild.language].botNotCompatibleWithYoutubePlaylists)
+                    if (!interaction.replied) {
+                        interaction.reply(strings[guild.language].botNotCompatibleWithYoutubePlaylists);
+                    }
+                    else {
+                        interaction.channel.send(strings[guild.language].botNotCompatibleWithYoutubePlaylists);
+                    }
                 }              
+            }
+            else {
+
+                if (!interaction.replied) {
+                    interaction.reply(strings[guild.language].incompatibleLink);
+                }
+                else {
+                    interaction.channel.send(strings[guild.language].incompatibleLink);
+                }
             }
         }
     }
@@ -610,10 +677,29 @@ module.exports.run = async (client, message, args, guild) => {
     }
 }
 
-module.exports.info = {
-    name: "play",
-    alias: "p"
-}
+module.exports.data = new SlashCommandBuilder()
+    .setName('play')
+    .setDescription(strings['eng'].playHelpDescription)
+    .addStringOption(option =>
+        option.setName('query')
+            .setRequired(false)
+            .setDescription('Specify a song name to load and play.')
+    )
+    .addStringOption(option =>
+        option.setName('link')
+            .setRequired(false)
+            .setDescription('Specify a song/playlist link from YouTube/Spotify to load and play.')
+    )
+    .addIntegerOption(option =>
+        option.setName('offset')
+            .setRequired(false)
+            .setDescription('Song number to start loading from a provided playlist.')
+    )
+    .addBooleanOption(option =>
+        option.setName('reverse')
+            .setRequired(false)
+            .setDescription('Load provided playlist starting from the last song.')
+    )
 
 module.exports.requirements = {
     userPerms: [],
