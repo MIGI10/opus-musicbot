@@ -33,6 +33,9 @@
             "Improved lang",
             "Bug fixes",
             "Performance improvements"
+        ],
+        "2.3 - 10/07/22": [
+            "Slash Commands have been implemented and adapted to all commands, text commands are no longer available"
         ]
     }
 }

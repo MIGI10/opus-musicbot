@@ -1,20 +1,20 @@
-module.exports.run = (client, message, args, guild) => {
+module.exports.run = (client, interaction, guild) => {
     
-    if (!client.queue.get(message.guild.id) || !client.queue.get(message.guild.id).connection) {
-        return message.reply(strings[guild.language].botNotInUse);
+    if (!client.queue.get(interaction.guildId) || !client.queue.get(interaction.guildId).connection) {
+        return interaction.reply(strings[guild.language].botNotInUse);
     }
 
-    const serverQueue = client.queue.get(message.guild.id);
+    const serverQueue = client.queue.get(interaction.guildId);
 
-    if (message.channel !== serverQueue.textChannel) {
-        return message.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id).replace('%PREFIX%', client.prefix));
+    if (interaction.channel !== serverQueue.textChannel) {
+        return interaction.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id));
     }
 
-    if (!message.member.voice.channel || message.member.voice.channel !== serverQueue.voiceChannel) {
-        return message.reply(strings[guild.language].userNotConnectedToSameVoice);
+    if (!interaction.member.voice.channel || interaction.member.voice.channel !== serverQueue.voiceChannel) {
+        return interaction.reply(strings[guild.language].userNotConnectedToSameVoice);
     }
 
-    serverQueue.textChannel.send(strings[guild.language].botLeftChannel.replace('%VOICECHANNEL%', serverQueue.voiceChannel.id));
+    interaction.reply(strings[guild.language].botLeftChannel.replace('%VOICECHANNEL%', serverQueue.voiceChannel.id));
 
     clearTimeout(serverQueue.inactivity);
 
@@ -26,13 +26,12 @@ module.exports.run = (client, message, args, guild) => {
     
     serverQueue.connection.destroy();
 
-    client.queue.delete(message.guild.id);
+    client.queue.delete(interaction.guildId);
 }
 
-module.exports.info = {
-    name: "leave",
-    alias: "l"
-}
+module.exports.data = new SlashCommandBuilder()
+    .setName('leave')
+    .setDescription(strings['eng'].leaveHelpDescription)
 
 module.exports.requirements = {
     userPerms: [],

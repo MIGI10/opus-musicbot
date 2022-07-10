@@ -1,43 +1,38 @@
-const ytdl = require('ytdl-core');
-const youtubedl = require('youtube-dl-exec').raw;
-
-module.exports.run = async (client, message, args, guild) => {
+module.exports.run = async (client, interaction, guild) => {
 
     voice = client.discordjsvoice
 
-    if (!client.queue.get(message.guild.id) || !client.queue.get(message.guild.id).connection) {
-        return message.reply(strings[guild.language].botNotInUse);
+    if (!client.queue.get(interaction.guild.id) || !client.queue.get(interaction.guild.id).connection) {
+        return interaction.reply(strings[guild.language].botNotInUse);
     }
 
-    const serverQueue = client.queue.get(message.guild.id);
+    const serverQueue = client.queue.get(interaction.guildId);
 
-    if (message.channel !== serverQueue.textChannel) {
-        return message.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id).replace('%PREFIX%', client.prefix));
+    if (interaction.channel !== serverQueue.textChannel) {
+        return interaction.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id));
     }
 
-    if (!message.member.voice.channel || message.member.voice.channel !== serverQueue.voiceChannel) {
-        return message.reply(strings[guild.language].userNotConnectedToSameVoice)
+    if (!interaction.member.voice.channel || interaction.member.voice.channel !== serverQueue.voiceChannel) {
+        return interaction.reply(strings[guild.language].userNotConnectedToSameVoice)
     }
 
     if (!serverQueue.playing) {
-        return message.reply(strings[guild.language].botPlayerStopped)
+        return interaction.reply(strings[guild.language].botPlayerStopped)
     }
 
     if (serverQueue.updating) {
-        return message.reply(strings[guild.language].botIsUpdating2)
-            .then(msg => setTimeout(() => { 
-                msg.delete(); 
-                message.delete()
+        return interaction.reply(strings[guild.language].botIsUpdating2)
+            .then(setTimeout(() => { 
+                interaction.deleteReply()
                 .catch((err) => null);
             }, 5000))
     }
 
     const nowPlaying = serverQueue.songs[0];
 
-    if (message.member.roles.cache.has(guild.modRoleId) || message.author.id == nowPlaying.requesterId) {
+    if (interaction.member.roles.cache.has(guild.modRoleId) || interaction.user.id == nowPlaying.requesterId) {
 
-        message.react('👌')
-        .catch((err) => null);
+        interaction.reply(strings[guild.language].skippedSong);
 
         serverQueue.player.stop(true);
         return;
@@ -47,18 +42,16 @@ module.exports.run = async (client, message, args, guild) => {
 
     if (usersConnected <= 2) {
 
-        message.react('👌')
-        .catch((err) => null);
-
+        interaction.reply(strings[guild.language].skippedSong);
         serverQueue.player.stop(true);
 
     } else {
 
-        const msg = await message.channel.send(strings[guild.language].skipMessage.replace('%USERCOUNT%', (Math.ceil(usersConnected*0.5))-1).replace('%TOTALUSERCOUNT%', usersConnected).replace('%PREFIX%', client.prefix));
+        interaction.reply(strings[guild.language].skipMessage.replace('%USERCOUNT%', (Math.ceil(usersConnected*0.5))-1).replace('%TOTALUSERCOUNT%', usersConnected));
 
-        let filter = m => m.content.split(' ')[0] == `${client.prefix}skip` && m.author.id !== message.author.id && m.member.voice.channel && m.member.voice.channel == serverQueue.voiceChannel;
+        let filter = m => m.content.split(' ')[0] == `${client.prefix}skip` && m.author.id !== interaction.user.id && m.member.voice.channel && m.member.voice.channel == serverQueue.voiceChannel;
 
-        message.channel.awaitMessages({
+        interaction.channel.awaitMessages({
             filter,
             max: ((Math.ceil(usersConnected*0.5))-1),
             time: 20000,
@@ -67,22 +60,19 @@ module.exports.run = async (client, message, args, guild) => {
         .then(async collected => {
             if (collected.size == ((Math.ceil(usersConnected*0.5))-1)) {
 
-                message.react('👌')
-                .catch((err) => null);
-
+                interaction.editReply(strings[guild.language].skippedSong);
                 serverQueue.player.stop(true);
             }
         })
         .catch(collected => {
-            return msg.edit(strings[guild.language].skipCancelled);
+            return interaction.editReply(strings[guild.language].skipCancelled);
         });
     }
 }
 
-module.exports.info = {
-    name: "skip",
-    alias: "s"
-}
+module.exports.data = new SlashCommandBuilder()
+    .setName('skip')
+    .setDescription(strings['eng'].skipHelpDescription)
 
 module.exports.requirements = {
     userPerms: [],

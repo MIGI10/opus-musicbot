@@ -1,56 +1,60 @@
-module.exports.run = (client, message, args, guild) => {
+module.exports.run = (client, interaction, guild) => {
 
-    if (!client.queue.get(message.guild.id) || !client.queue.get(message.guild.id).connection) {
-        return message.reply(strings[guild.language].botNotInUse);
+    if (!client.queue.get(interaction.guildId) || !client.queue.get(interaction.guildId).connection) {
+        return interaction.reply(strings[guild.language].botNotInUse);
     }
 
-    const serverQueue = client.queue.get(message.guild.id);
+    const serverQueue = client.queue.get(interaction.guildId);
 
-    if (!message.member.voice.channel || message.member.voice.channel !== serverQueue.voiceChannel) {
-        return message.reply(strings[guild.language].userNotConnectedToSameVoice)
+    if (!interaction.member.voice.channel || interaction.member.voice.channel != serverQueue.voiceChannel) {
+        return interaction.reply(strings[guild.language].userNotConnectedToSameVoice)
     }
 
-    if (message.channel !== serverQueue.textChannel) {
+    if (interaction.channel !== serverQueue.textChannel) {
 
-        const permissions = message.channel.permissionsFor(message.guild.me);
+        const permissions = interaction.channel.permissionsFor(interaction.guild.me);
         if (!permissions.has("VIEW_CHANNEL") || !permissions.has("SEND_MESSAGES")) {
-            return serverQueue.textChannel.send(strings[guild.language].transferNeedPerms.replace('%CHANNEL%', message.channel.id).replace('%USER%', message.author.id));
+            return interaction.reply(strings[guild.language].transferNeedPerms.replace('%CHANNEL%', interaction.channel.id).replace('%USER%', interaction.user.id));
         }
 
-        serverQueue.textChannel.send(strings[guild.language].transferCompleteOldChannel.replace('%USER%', message.author.id).replace('%CHANNEL%', message.channel.id));
-        message.channel.send(strings[guild.language].transferCompleteNewChannel);
-        serverQueue.textChannel = message.channel;
+        serverQueue.textChannel.send(strings[guild.language].transferCompleteOldChannel.replace('%USER%', interaction.user.id).replace('%CHANNEL%', interaction.channel.id));
+        interaction.reply(strings[guild.language].transferCompleteNewChannel);
+        serverQueue.textChannel = interaction.channel;
 
     } else {
 
-        if (message.mentions.channels.first()) {
+        if (interaction.mentions.channels.first()) {
 
-            const mentionedChannel = message.mentions.channels.first();
+            const mentionedChannel = interaction.mentions.channels.first();
 
-            if (mentionedChannel == message.channel) {
+            if (mentionedChannel == interaction.channel) {
 
-                message.reply(strings[guild.language].transferSameChannel);
+                interaction.reply(strings[guild.language].transferSameChannel);
 
             } else {
 
-                const permissions = mentionedChannel.permissionsFor(message.guild.me);
+                const permissions = mentionedChannel.permissionsFor(interaction.guild.me);
                 if (!permissions.has("VIEW_CHANNEL") || !permissions.has("SEND_MESSAGES")) {
-                    return message.reply(strings[guild.language].transferNeedPerms2);
+                    return interaction.reply(strings[guild.language].transferNeedPerms2);
                 }
 
-                message.channel.send(strings[guild.language].transferCompleteOldChannelMention.replace('%CHHANEL%', mentionedChannel.id));
+                interaction.reply(strings[guild.language].transferCompleteOldChannelMention.replace('%CHHANEL%', mentionedChannel.id));
                 serverQueue.textChannel = mentionedChannel;
             }
         } else {
-            message.reply(strings[guild.language].transferMustSpecifyChannel)
+            interaction.reply(strings[guild.language].transferMustSpecifyChannel)
         }
     }
 }
 
-module.exports.info = {
-    name: "transfer",
-    alias: "tr"
-}
+module.exports.data = new SlashCommandBuilder()
+    .setName('transfer')
+    .setDescription(strings['eng'].transferHelpDescription)
+    .addChannelOption(option =>
+        option.setName('channel')
+            .setRequired(false)
+            .setDescription('Specify a text channel to transfer session.')
+    )
 
 module.exports.requirements = {
     userPerms: [],

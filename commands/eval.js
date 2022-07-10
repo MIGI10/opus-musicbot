@@ -1,27 +1,31 @@
-module.exports.run = async (client, message, args) => {
+module.exports.run = async (client, interaction) => {
 
-    var result = args.join(' ');
+    const code = interaction.options.getString('code');
 
     try {
-        var evaled = await eval(result);
+        var evaled = await eval(code);
     } catch (err) {
-        message.channel.send(`\`ERROR\` \`\`\`xl\n${err}\n\`\`\``);
+        interaction.channel.send(`\`ERROR\` \`\`\`xl\n${err}\n\`\`\``);
     }
 
     const evalEmbed = new client.discordjs.MessageEmbed()
         .setColor('RANDOM')
         .addFields(
-            { name: '**Input:**', value: `\`\`\`js\n${result}\`\`\``, inline: false },
+            { name: '**Input:**', value: `\`\`\`js\n${code}\`\`\``, inline: false },
             { name: '**Output:**', value: `\`\`\`js\n${evaled}\`\`\``, inline: false }
         )
 
-    message.channel.send({ embeds: [evalEmbed]})
+        interaction.reply({ embeds: [evalEmbed]})
 }
 
-module.exports.info = {
-    name: "eval",
-    alias: ""
-}
+module.exports.data = new SlashCommandBuilder()
+    .setName('eval')
+    .setDescription('Evaluate JavaScript code.')
+    .addStringOption(option =>
+        option.setName('code')
+            .setRequired(true)
+            .setDescription('Code to evaluate.')
+    )
 
 module.exports.requirements = {
     userPerms: [],

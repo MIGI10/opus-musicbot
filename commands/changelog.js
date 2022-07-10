@@ -1,7 +1,7 @@
 const spaChangelog = require('../changelog/changelog-spa.json');
 const engChangelog = require('../changelog/changelog-eng.json');
 
-module.exports.run = async (client, message, args, guild) => {
+module.exports.run = async (client, interaction, guild) => {
     
     const changelogEmbed = new client.discordjs.MessageEmbed()
         .setTitle(`Changelog | Opus Music Bot`)
@@ -25,13 +25,12 @@ module.exports.run = async (client, message, args, guild) => {
         changelogEmbed.addField(`v${version}`, changes);
     }
     
-    message.channel.send({ embeds: [changelogEmbed]})
+    interaction.reply({ embeds: [changelogEmbed]})
 }
 
-module.exports.info = {
-    name: "changelog",
-    alias: ""
-}
+module.exports.data = new SlashCommandBuilder()
+    .setName('changelog')
+    .setDescription(strings['eng'].changelogHelpDescription)
 
 module.exports.requirements = {
     userPerms: [],

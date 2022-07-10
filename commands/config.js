@@ -1,4 +1,4 @@
-module.exports.run = async (client, message, args, guild) => {
+module.exports.run = async (client, interaction, guild) => {
 
     if (!guild) {
 
@@ -21,13 +21,13 @@ module.exports.run = async (client, message, args, guild) => {
                 englishButton
             );
 
-        if (message.member.permissions.has('MANAGE_MESSAGES', true)) {
+        if (interaction.member.permissions.has('MANAGE_MESSAGES', true)) {
 
-            const setupMsg = await message.channel.send({ content: 'Escoge un idioma:\nChoose a language:', components: [row]});
+            interaction.reply({ content: 'Escoge un idioma:\nChoose a language:', components: [row]});
 
-            const filter = i => i.member.id === message.author.id;
+            const filter = i => i.member.id === interaction.user.id;
 
-            const collector = message.channel.createMessageComponentCollector({
+            const collector = interaction.channel.createMessageComponentCollector({
                     filter, 
                     time: 30000 
                 });
@@ -42,13 +42,13 @@ module.exports.run = async (client, message, args, guild) => {
                     lang = 'eng';
                 }
 
-                setupMsg.edit({ components: [] });
+                interaction.editReply({ components: [] });
 
-                setupMsg.edit(strings[lang].setupMsg.replace('%GUILDNAME%', message.guild.name).replaceAll('%PREFIX%', client.prefix))
+                interaction.editReply(strings[lang].setupMsg.replace('%GUILDNAME%', interaction.guild.name))
             
-                let msgFilter = m => m.author.id == message.author.id && m.content.split(' ')[0].length > 15;
+                let msgFilter = m => m.author.id == interaction.user.id && m.content.split(' ')[0].length > 15;
 
-                message.channel.awaitMessages({
+                interaction.channel.awaitMessages({
                     msgFilter,
                     max: 1,
                     time: 120000,
@@ -57,108 +57,125 @@ module.exports.run = async (client, message, args, guild) => {
                 .then(async (collected) => {
                     modRole = collected.first().content;
 
-                    const guildRoles = await message.guild.roles.fetch();
+                    const guildRoles = await interaction.guild.roles.fetch();
 
                     if (guildRoles.has(modRole)) {
 
-                        const owner = await message.guild.fetchOwner();
+                        const owner = await interaction.guild.fetchOwner();
 
                         const guildDoc = new client.db.guild({
-                            id: message.guild.id,
-                            name: message.guild.name,
+                            id: interaction.guildId,
+                            name: interaction.guild.name,
                             language: lang,
-                            memberCount: message.guild.memberCount,
-                            ownerId: message.guild.ownerId,
+                            memberCount: interaction.guild.memberCount,
+                            ownerId: interaction.guild.ownerId,
                             ownerTag: owner.user.tag,
                             modRoleId: modRole,
-                            joinedAt: message.guild.joinedAt,
-                            createdAt: message.guild.createdAt,
-                            isPartnered: message.guild.partnered,
-                            isVerified: message.guild.verified,
-                            boostCount: message.guild.premiumSubscriptionCount,
-                            description: message.guild.description
+                            joinedAt: interaction.guild.joinedAt,
+                            createdAt: interaction.guild.createdAt,
+                            isPartnered: interaction.guild.partnered,
+                            isVerified: interaction.guild.verified,
+                            boostCount: interaction.guild.premiumSubscriptionCount,
+                            description: interaction.guild.description
                         })
 
                         await guildDoc.save().catch(err => console.log(err));
 
-                        setupMsg.edit(strings[lang].setupComplete.replace('%PREFIX%', client.prefix));
+                        interaction.editReply(strings[lang].setupComplete);
                         
                     } else {
-                        setupMsg.edit(strings[lang].setupInvalidRole);
+                        interaction.editReply(strings[lang].setupInvalidRole);
                     }
                 })
                 .catch(collected => {
-                    return setupMsg.edit(strings[lang].setupTimeout.replace('%USER%', message.author.id));
+                    return interaction.editReply(strings[lang].setupTimeout.replace('%USER%', interaction.user.id));
                 });
             });
 
             collector.once('end', collected => {
 
                 if (collected.size === 0) {
-                    setupMsg.edit({ components: [] });
-                    return setupMsg.edit(`No se ha escogido ningún idioma, vuelve a ejecutar el comando.\nNo language has been selected, execute the command again.`);
+                    interaction.editReply({ components: [] });
+                    return interaction.editReply(`No se ha escogido ningún idioma, vuelve a ejecutar el comando.\nNo language has been selected, execute the command again.`);
                 }
             });
 
         } else {
-            message.reply(`Solamente los usuarios con el permiso \`MANAGE_MESSAGES\` pueden iniciar la configuración\nOnly users with \`MANAGE_MESSAGES\` permission can start the configuration`)
+            interaction.reply(`Solamente los usuarios con el permiso \`MANAGE_MESSAGES\` pueden iniciar la configuración\nOnly users with \`MANAGE_MESSAGES\` permission can start the configuration`)
         }
 
     } else {
 
-        if (message.member.roles.cache.has(guild.modRoleId)) {
+        const langArg = interaction.options.getString('language');
+        const modRoleArg = interaction.options.getRole('role');
 
-            if (!args[0]) {
+        if (interaction.member.roles.cache.has(guild.modRoleId)) {
 
-                message.channel.send(strings[guild.language].configInstructions);
+            if (!langArg && !modRoleArg) {
+
+                interaction.reply(strings[guild.language].configInstructions);
             
             } else {
 
-                if (args[0] === 'spa') {
+                if (langArg && langArg == 'config_spa') {
 
                     guild.language = 'spa';
 
                     await guild.save().catch(err => console.log(err));
 
-                    message.channel.send(strings['spa'].configLanguageUpdated);
+                    interaction.reply(strings['spa'].configLanguageUpdated);
 
-                } else if (args[0] === 'eng') {
+                } 
+                else if (langArg && langArg == 'config_eng') {
 
                     guild.language = 'eng';
 
                     await guild.save().catch(err => console.log(err));
 
-                    message.channel.send(strings['eng'].configLanguageUpdated);
+                    interaction.reply(strings['eng'].configLanguageUpdated);
 
-                } else if (args[0].length > 15) {
+                } 
+                else {
 
-                    const guildRoles = await message.guild.roles.fetch();
+                    const guildRoles = await interaction.guild.roles.fetch();
 
-                    if (guildRoles.has(args[0])) {
+                    if (guildRoles.has(modRoleArg.id)) {
 
-                        guild.modRoleId = args[0];
+                        guild.modRoleId = modRoleArg.id;
 
                         await guild.save().catch(err => console.log(err));
 
-                        message.channel.send(strings[guild.language].configModRoleUodated)
+                        interaction.reply(strings[guild.language].configModRoleUpdated);
                         
-                    } else {
-                        message.channel.send(strings[guild.language].setupInvalidRole)
+                    } 
+                    else {
+
+                        interaction.reply(strings[guild.language].setupInvalidRole);
                     }
-                } else {
-                    message.reply(strings[guild.language].configMustSpecifySomething)
-                }
+                } 
             } 
         } else {
-            message.reply(strings[guild.language].configNotAMod)
+
+            interaction.reply(strings[guild.language].configNotAMod);
         }
     }
 }
 
-module.exports.info = {
-    name: "config",
-    alias: ""
-}
+module.exports.data = new SlashCommandBuilder()
+    .setName('config')
+    .setDescription(strings['eng'].configHelpDescription)
+    .addStringOption(option =>
+        option.setName('language')
+            .setRequired(false)
+            .setDescription('Specify the language desired for bot responses.')
+            .addChoice('English', 'config_eng')
+            .addChoice('Spanish', 'config_spa')
+    )
+    .addRoleOption(option =>
+        option.setName('role')
+            .setRequired(false)
+            .setDescription('Specify a moderator role to give elevated permissions.')
+    )
 
 module.exports.requirements = {
     userPerms: [],

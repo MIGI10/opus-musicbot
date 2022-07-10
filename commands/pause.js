@@ -1,21 +1,21 @@
-module.exports.run = (client, message, args, guild) => {
+module.exports.run = (client, interaction, guild) => {
 
-    if (!client.queue.get(message.guild.id) || !client.queue.get(message.guild.id).connection) {
-        return message.reply(strings[guild.language].botNotInUse);
+    if (!client.queue.get(interaction.guildId) || !client.queue.get(interaction.guildId).connection) {
+        return interaction.reply(strings[guild.language].botNotInUse);
     }
 
-    const serverQueue = client.queue.get(message.guild.id);
+    const serverQueue = client.queue.get(interaction.guildId);
 
-    if (message.channel !== serverQueue.textChannel) {
-        return message.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id).replace('%PREFIX%', client.prefix));
+    if (interaction.channel !== serverQueue.textChannel) {
+        return interaction.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id));
     }
 
-    if (!message.member.voice.channel || message.member.voice.channel !== serverQueue.voiceChannel) {
-        return message.reply(strings[guild.language].userNotConnectedToSameVoice);
+    if (!interaction.member.voice.channel || interaction.member.voice.channel !== serverQueue.voiceChannel) {
+        return interaction.reply(strings[guild.language].userNotConnectedToSameVoice);
     }
 
     if (!serverQueue.playing) {
-        return message.reply(strings[guild.language].botAlreadyStopped)
+        return interaction.reply(strings[guild.language].botAlreadyStopped)
     }
 
     serverQueue.playing = false;
@@ -28,14 +28,14 @@ module.exports.run = (client, message, args, guild) => {
 
     serverQueue.songs[0].pauseTimestamps.push(pauseTimestamp);
 
-    message.channel.send(strings[guild.language].botPaused.replace('%PREFIX%', client.prefix));
+    interaction.reply(strings[guild.language].botPaused);
 
     serverQueue.inactivity = setTimeout(() => {
 
         if (!serverQueue.playing) {
             
             client.queue.delete(serverQueue.textChannel.guild.id);
-            serverQueue.textChannel.send(strings[guild.language].botInactiveFor3Minutes)
+            interaction.channel.send(strings[guild.language].botInactiveFor3Minutes)
             
             if (serverQueue.connection._state.status != 'destroyed') {
                 serverQueue.connection.destroy();
@@ -45,10 +45,9 @@ module.exports.run = (client, message, args, guild) => {
     }, 180 * 1000);
 }
 
-module.exports.info = {
-    name: "pause",
-    alias: ""
-}
+module.exports.data = new SlashCommandBuilder()
+    .setName('pause')
+    .setDescription(strings['eng'].pauseHelpDescription)
 
 module.exports.requirements = {
     userPerms: [],

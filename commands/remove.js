@@ -1,42 +1,46 @@
-module.exports.run = (client, message, args, guild) => {
+module.exports.run = (client, interaction, guild) => {
 
-    if (!client.queue.get(message.guild.id) || !client.queue.get(message.guild.id).connection) {
-        return message.reply(strings[guild.language].botNotInUse);
+    if (!client.queue.get(interaction.guildId) || !client.queue.get(interaction.guildId).connection) {
+        return interaction.reply(strings[guild.language].botNotInUse);
     }
 
-    const serverQueue = client.queue.get(message.guild.id);
+    const serverQueue = client.queue.get(interaction.guildId);
 
-    if (message.channel !== serverQueue.textChannel) {
-        return message.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id).replace('%PREFIX%', client.prefix));
+    if (interaction.channel !== serverQueue.textChannel) {
+        return interaction.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id));
     }
 
-    if (!message.member.voice.channel || message.member.voice.channel !== serverQueue.voiceChannel) {
-        return message.reply(strings[guild.language].userNotConnectedToSameVoice)
+    if (!interaction.member.voice.channel || interaction.member.voice.channel !== serverQueue.voiceChannel) {
+        return interaction.reply(strings[guild.language].userNotConnectedToSameVoice)
     }
 
-    if (!args[0] || isNaN(args[0])) {
-        return message.reply(strings[guild.language].userMustSpecifySongToRemove.replace('%PREFIX%', client.prefix))
-    }
+    const songNum = interaction.options.getInteger('song');
 
-    const songNum = parseInt(args[0]);
+    if (!songNum) {
+        return interaction.reply(strings[guild.language].userMustSpecifySongToRemove)
+    }
 
     if (serverQueue.songs.length <= 1) {
-        return message.reply(strings[guild.language].removeNoQueuedSongs)
+        return interaction.reply(strings[guild.language].removeNoQueuedSongs)
     }
 
     if (songNum >= serverQueue.songs.length || songNum == 0) {
-        return message.reply(strings[guild.language].numDoesNotCorrespondToSong.replace('%SONGNUM%', songNum).replace('%PREFIX%', client.prefix))
+        return interaction.reply(strings[guild.language].numDoesNotCorrespondToSong.replace('%SONGNUM%', songNum))
     }
 
-    message.channel.send(`**${serverQueue.songs[songNum].title}** ${strings[guild.language].songRemoved}`)
+    interaction.reply(`**${serverQueue.songs[songNum].title}** ${strings[guild.language].songRemoved}`)
 
     serverQueue.songs.splice(songNum, 1);
 }
 
-module.exports.info = {
-    name: "remove",
-    alias: "rm"
-}
+module.exports.data = new SlashCommandBuilder()
+    .setName('remove')
+    .setDescription(strings['eng'].removeHelpDescription)
+    .addIntegerOption(option =>
+        option.setName('song')
+            .setRequired(true)
+            .setDescription('Specify a song number to remove. See queue to view the numbering of loaded songs.')
+    )
 
 module.exports.requirements = {
     userPerms: [],

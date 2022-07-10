@@ -1,40 +1,40 @@
-module.exports.run = async (client, message, args, guild) => {
+module.exports.run = async (client, interaction, guild) => {
 
-    if (!client.queue.get(message.guild.id) || !client.queue.get(message.guild.id).connection) {
-        return message.reply(strings[guild.language].botNotInUse);
+    if (!client.queue.get(interaction.guildId) || !client.queue.get(interaction.guildId).connection) {
+        return interaction.reply(strings[guild.language].botNotInUse);
     }
 
-    const serverQueue = client.queue.get(message.guild.id);
+    const serverQueue = client.queue.get(interaction.guildId);
 
-    if (message.channel !== serverQueue.textChannel) {
-        return message.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id).replace('%PREFIX%', client.prefix));
+    if (interaction.channel !== serverQueue.textChannel) {
+        return interaction.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id));
     }
 
-    if (!message.member.voice.channel || message.member.voice.channel !== serverQueue.voiceChannel) {
-        return message.reply(strings[guild.language].userNotConnectedToSameVoice)
+    if (!interaction.member.voice.channel || interaction.member.voice.channel !== serverQueue.voiceChannel) {
+        return interaction.reply(strings[guild.language].userNotConnectedToSameVoice)
     }
 
     if (!serverQueue.songs[0]) {
-        return message.reply(strings[guild.language].botNoQueuedSongs)
+        return interaction.reply(strings[guild.language].botNoQueuedSongs)
     }
 
     const usersConnected = serverQueue.voiceChannel.members.size - 1;
 
     if (serverQueue.updating) {
-        return message.reply(strings[guild.language].botIsUpdating3);
+        return interaction.reply(strings[guild.language].botIsUpdating3);
     }
 
-    if (usersConnected <= 2 || message.member.roles.cache.has(guild.modRoleId)) {
+    if (usersConnected <= 2 || interaction.member.roles.cache.has(guild.modRoleId)) {
 
         await clear();
 
     } else {
 
-        message.channel.send(strings[guild.language].clearMessage.replace('%USERCOUNT%', (Math.ceil(usersConnected*0.5))-1).replace('%TOTALUSERCOUNT%', usersConnected).replace('%PREFIX%', client.prefix));
+        interaction.reply(strings[guild.language].clearMessage.replace('%USERCOUNT%', (Math.ceil(usersConnected*0.5))-1).replace('%TOTALUSERCOUNT%', usersConnected));
 
-        let filter = m => m.content.split(' ')[0] == `${client.prefix}clear` && m.author.id !== message.author.id && m.member.voice.channel && m.member.voice.channel == serverQueue.voiceChannel;
+        let filter = m => m.content.split(' ')[0] == `${client.prefix}clear` && m.author.id !== interaction.user.id && m.member.voice.channel && m.member.voice.channel == serverQueue.voiceChannel;
 
-        message.channel.awaitMessages({
+        interaction.channel.awaitMessages({
             filter,
             max: ((Math.ceil(usersConnected*0.5))-1),
             time: 20000,
@@ -47,7 +47,7 @@ module.exports.run = async (client, message, args, guild) => {
             }
         })
         .catch(collected => {
-            return message.channel.send(strings[guild.language].clearCancelled);
+            return interaction.editReply(strings[guild.language].clearCancelled);
         });
     }
 
@@ -59,14 +59,14 @@ module.exports.run = async (client, message, args, guild) => {
         serverQueue.songs = [];
         serverQueue.player.stop(true);
 
-        message.channel.send(strings[guild.language].clearComplete);
+        interaction.channel.send(strings[guild.language].clearComplete);
 
         serverQueue.inactivity = setTimeout(() => {
 
             if (!serverQueue.playing && !serverQueue.songs[0]) {
 
                 client.queue.delete(serverQueue.textChannel.guild.id);
-                serverQueue.textChannel.send(strings[guild.language].botInactiveFor3Minutes)
+                interaction.channel.send(strings[guild.language].botInactiveFor3Minutes);
                 
                 if (serverQueue.connection._state.status != 'destroyed') {
                     serverQueue.connection.destroy();
@@ -77,10 +77,9 @@ module.exports.run = async (client, message, args, guild) => {
     }
 }
 
-module.exports.info = {
-    name: "clear",
-    alias: "c"
-}
+module.exports.data = new SlashCommandBuilder()
+    .setName('clear')
+    .setDescription(strings['eng'].clearHelpDescription)
 
 module.exports.requirements = {
     userPerms: [],

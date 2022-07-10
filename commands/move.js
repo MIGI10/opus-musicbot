@@ -1,49 +1,58 @@
-module.exports.run = (client, message, args, guild) => {
+module.exports.run = (client, interaction, guild) => {
 
-    if (!client.queue.get(message.guild.id) || !client.queue.get(message.guild.id).connection) {
-        return message.reply(strings[guild.language].botNotInUse);
+    if (!client.queue.get(interaction.guildId) || !client.queue.get(interaction.guildId).connection) {
+        return interaction.reply(strings[guild.language].botNotInUse);
     }
 
-    const serverQueue = client.queue.get(message.guild.id);
+    const serverQueue = client.queue.get(interaction.guildId);
 
-    if (message.channel !== serverQueue.textChannel) {
-        return message.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id).replace('%PREFIX%', client.prefix));
+    if (interaction.channel !== serverQueue.textChannel) {
+        return interaction.reply(strings[guild.language].botOccupied.replace('%VOICECHANNELID%', serverQueue.voiceChannel.id).replace('%TEXTCHANNELID%', serverQueue.textChannel.id));
     }
 
-    if (!message.member.voice.channel || message.member.voice.channel !== serverQueue.voiceChannel) {
-        return message.reply(strings[guild.language].userNotConnectedToSameVoice);
+    if (!interaction.member.voice.channel || interaction.member.voice.channel !== serverQueue.voiceChannel) {
+        return interaction.reply(strings[guild.language].userNotConnectedToSameVoice);
     }
 
-    if (!args[0] || !args[1] || isNaN(args[0]) || isNaN(args[1])) {
-        return message.reply(strings[guild.language].userMustSpecifySongPositionToMove.replace('%PREFIX%', client.prefix));
-    }
+    const songNum = interaction.options.getInteger('song');
+    const posNum = interaction.options.getInteger('position');
 
-    const songNum = parseInt(args[0]);
-    const posNum = parseInt(args[1]);
+    if (!songNum || !posNum) {
+        return interaction.reply(strings[guild.language].userMustSpecifySongPositionToMove);
+    }
 
     if (serverQueue.songs.length <= 2) {
-        return message.reply(strings[guild.language].notEnoughSongsToMove)
+        return interaction.reply(strings[guild.language].notEnoughSongsToMove)
     }
 
     if (songNum >= serverQueue.songs.length || songNum == 0) {
-        return message.reply(strings[guild.language].numDoesNotCorrespondToSong.replace('%SONGNUM%', songNum).replace('%PREFIX%', client.prefix))
+        return interaction.reply(strings[guild.language].numDoesNotCorrespondToSong.replace('%SONGNUM%', songNum))
     }
 
     if (posNum >= serverQueue.songs.length || posNum == 0) {
-        return message.reply(strings[guild.language].numDoesNotCorrespondToPos.replace('%POSNUM%', posNum).replace('%PREFIX%', client.prefix))
+        return interaction.reply(strings[guild.language].numDoesNotCorrespondToPos.replace('%POSNUM%', posNum))
     }
 
     var songToMove = serverQueue.songs[songNum];
     serverQueue.songs.splice(songNum, 1);
     serverQueue.songs.splice(posNum, 0, songToMove);
 
-    message.channel.send(strings[guild.language].songMoved.replace('%SONGNAME%', songToMove.title).replace('%OLDPOS%', songNum).replace('%NEWPOS%', posNum).replace('%TOTALSONGCOUNT%', serverQueue.songs.length - 1))
+    interaction.reply(strings[guild.language].songMoved.replace('%SONGNAME%', songToMove.title).replace('%OLDPOS%', songNum).replace('%NEWPOS%', posNum).replace('%TOTALSONGCOUNT%', serverQueue.songs.length - 1))
 }
 
-module.exports.info = {
-    name: "move",
-    alias: "m"
-}
+module.exports.data = new SlashCommandBuilder()
+    .setName('move')
+    .setDescription(strings['eng'].moveHelpDescription)
+    .addIntegerOption(option =>
+        option.setName('song')
+            .setRequired(true)
+            .setDescription('Specify a song number to move. See queue to view the numbering of loaded songs.')
+    )
+    .addIntegerOption(option =>
+        option.setName('position')
+            .setRequired(true)
+            .setDescription('Specify the queue position to move the song to. See queue to view available positions.')
+    )
 
 module.exports.requirements = {
     userPerms: [],

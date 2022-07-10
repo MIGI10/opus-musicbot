@@ -33,6 +33,9 @@
             "El lenguaje ha sido mejorado",
             "Correción de bugs",
             "Mejoras de rendimiento"
+        ],
+        "2.3 - 10/07/22": [
+            "Se han implementado y adapatado todos los comandos como comandos Slash (/), los comandos textuales ya no están disponibles"
         ]
     }
 }
