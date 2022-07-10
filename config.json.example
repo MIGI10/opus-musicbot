@@ -1,5 +1,4 @@
 {
-    "prefix":"o!",
     "version":"",
     "botToken":"",
     "botOwnerID":"",
@@ -11,5 +10,7 @@
     "informChannel":"",
     "geniusToken":"",
     "youtubeCookie":"",
-    "identityToken":""
+    "identityToken":"",
+    "devGuildID":"",
+    "clientID":""
 }
