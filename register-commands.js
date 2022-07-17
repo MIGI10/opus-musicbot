@@ -20,8 +20,7 @@ module.exports = (globalDeploy) => {
         }
     }
 
-    //const rest = new REST({ version: '9' }).setToken(config.botToken);
-    const rest = new REST({ version: '9' }).setToken('NzkyMTI5NTI0MTUzNzEyNjYw.X-ZOGw.-hXmwbqrnH_kbBk9Hs28xTNQTM8');
+    const rest = new REST({ version: '9' }).setToken(config.botToken);
 
     (async () => {
 
@@ -31,8 +30,7 @@ module.exports = (globalDeploy) => {
 
             if (globalDeploy) {
                 await rest.put(
-                    //Routes.applicationCommands(config.clientID),
-                    Routes.applicationCommands('792129524153712660'),
+                    Routes.applicationCommands(config.clientID),
                     { body: commands },
                 );
             }

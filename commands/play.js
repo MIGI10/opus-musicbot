@@ -210,14 +210,7 @@ module.exports.run = async (client, interaction, guild) => {
         }
 
         if (argsType == 'query') {
-
-            if (!interaction.replied) {
-                interaction.reply();
-            }
-            else {
-                interaction.channel.send();
-            }
-
+            
             const queueSong = await queue(args, interaction.user.id, interaction.user.tag)
                 .catch(err => {
                     let errorCode = logError(err, '11', interaction, guild, serverQueue);

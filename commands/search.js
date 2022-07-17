@@ -2,11 +2,11 @@ const youtubeSearch = require('youtube-search-api');
 
 module.exports.run = async (client, interaction, guild) => {
 
-    if (!args[0]) return interaction.reply(strings[guild.language].userMustSpecifySong)
+    const song = interaction.options.getString('song');
 
-    args = args.join(' ');
+    if (!song) return interaction.reply(strings[guild.language].userMustSpecifySong)
 
-    const videoList = await youtubeSearch.GetListByKeyword(args, false);
+    const videoList = await youtubeSearch.GetListByKeyword(song, false);
 
     let embedList = '';
 
@@ -34,7 +34,7 @@ module.exports.run = async (client, interaction, guild) => {
     }
 
     const videoListEmbed = new client.discordjs.MessageEmbed()
-    .setAuthor({ name: `${strings[guild.language].searchResults} "${args}"`, iconURL: client.user.displayAvatarURL({dynamic: true, size: 1024})})
+    .setAuthor({ name: `${strings[guild.language].searchResults} "${song}"`, iconURL: client.user.displayAvatarURL({dynamic: true, size: 1024})})
     .setDescription(embedList)
     .setFooter({ text: strings[guild.language].searchHowToPlay})
     .setColor(65453)

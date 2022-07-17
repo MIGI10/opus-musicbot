@@ -33,52 +33,52 @@ module.exports = async (client, oldState, newState) => {
                     client.queue.delete(oldState.guild.id);
             
                 }, 10 * 1000);
+
             }
-        }
-
-        if (oldState.id == client.user.id && newState.channel !== oldState.channel) {
-
-            if (!newState.channel) {
+            else if (oldState.id == client.user.id) {
                 
-                clearTimeout(serverQueue.inactivity);
-
-                serverQueue.playing = false;
-
-                if (serverQueue.player) {
-                    serverQueue.player.stop(true);
-                }
+                if (!newState.channel) {
                 
-                client.queue.delete(oldState.guild.id);
-
-                serverQueue.textChannel.send(strings[guild.language].botHasBeenDisconnected);
-
-            } else {
-
-                serverQueue.connection = client.discordjsvoice.getVoiceConnection(newState.guild.id);
-                serverQueue.voiceChannel = newState.channel;
-                serverQueue.textChannel.send(strings[guild.language].botHasBeenMoved.replace('%VOICECHANNEL%', serverQueue.voiceChannel.id).replace('%TEXTCHANNEL%', serverQueue.textChannel.id).replace('%PREFIX%', client.prefix));
-                
-                if (newState.channel.members.size == 1) {
-
                     clearTimeout(serverQueue.inactivity);
-
-                    serverQueue.inactivity = setTimeout(() => {
-
-                        serverQueue.textChannel.send(strings[guild.language].botLeftAlone);
-
-                        serverQueue.playing = false;
-
-                        if (serverQueue.player) {
-                            serverQueue.player.stop(true);
-                        }
-
-                        if (serverQueue.connection._state.status != 'destroyed') {
-                            serverQueue.connection.destroy();
-                        }
-
-                        client.queue.delete(oldState.guild.id);
-                
-                    }, 10 * 1000);
+    
+                    serverQueue.playing = false;
+    
+                    if (serverQueue.player) {
+                        serverQueue.player.stop(true);
+                    }
+                    
+                    client.queue.delete(oldState.guild.id);
+    
+                    serverQueue.textChannel.send(strings[guild.language].botHasBeenDisconnected);
+    
+                } else {
+    
+                    serverQueue.connection = client.discordjsvoice.getVoiceConnection(newState.guild.id);
+                    serverQueue.voiceChannel = newState.channel;
+                    serverQueue.textChannel.send(strings[guild.language].botHasBeenMoved.replace('%VOICECHANNEL%', serverQueue.voiceChannel.id).replace('%TEXTCHANNEL%', serverQueue.textChannel.id).replace('%PREFIX%', client.prefix));
+                    
+                    if (newState.channel.members.size == 1) {
+    
+                        clearTimeout(serverQueue.inactivity);
+    
+                        serverQueue.inactivity = setTimeout(() => {
+    
+                            serverQueue.textChannel.send(strings[guild.language].botLeftAlone);
+    
+                            serverQueue.playing = false;
+    
+                            if (serverQueue.player) {
+                                serverQueue.player.stop(true);
+                            }
+    
+                            if (serverQueue.connection._state.status != 'destroyed') {
+                                serverQueue.connection.destroy();
+                            }
+    
+                            client.queue.delete(oldState.guild.id);
+                    
+                        }, 10 * 1000);
+                    }
                 }
             }
         }
