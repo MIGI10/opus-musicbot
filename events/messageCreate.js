@@ -21,7 +21,7 @@ module.exports = async (client, message) => {
         
             if (!guild && cmd.info.name !== 'config') {
 
-                message.reply(strings['spa'].guildNotConfigured.replace('%PREFIX%', client.prefix) + '\n' + strings['eng'].guildNotConfigured.replace('%PREFIX%', client.prefix));
+                message.reply(strings['spa'].guildNotConfigured + '\n' + strings['eng'].guildNotConfigured);
             }
             else {
 

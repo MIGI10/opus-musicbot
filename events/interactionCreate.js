@@ -19,8 +19,8 @@ module.exports = async (client, interaction) => {
         id: interaction.guildId,
     }).catch(err => console.log(err));
 
-    if (!guild && cmd.info.name !== 'config') {
-        return interaction.reply(strings['spa'].guildNotConfigured.replace('%PREFIX%', client.prefix) + '\n' + strings['eng'].guildNotConfigured.replace('%PREFIX%', client.prefix));
+    if (!guild && interaction.commandName !== 'config') {
+        return interaction.reply(strings['spa'].guildNotConfigured + '\n' + strings['eng'].guildNotConfigured);
     }
 
     const isMod = interaction.member.roles.cache.has(client.config.modRoleID);

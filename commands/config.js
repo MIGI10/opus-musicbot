@@ -42,9 +42,7 @@ module.exports.run = async (client, interaction, guild) => {
                     lang = 'eng';
                 }
 
-                interaction.editReply({ components: [] });
-
-                interaction.editReply(strings[lang].setupMsg.replace('%GUILDNAME%', interaction.guild.name))
+                interaction.editReply({ content: strings[lang].setupMsg.replace('%GUILDNAME%', interaction.guild.name), components: [] });
             
                 let msgFilter = m => m.author.id == interaction.user.id && m.content.split(' ')[0].length > 15;
 
@@ -109,7 +107,7 @@ module.exports.run = async (client, interaction, guild) => {
         const langArg = interaction.options.getString('language');
         const modRoleArg = interaction.options.getRole('role');
 
-        if (interaction.member.roles.cache.has(guild.modRoleId)) {
+        if (interaction.member.roles.cache.has(guild.modRoleId) || interaction.member.permissions.has('ADMINISTRATOR')) {
 
             if (!langArg && !modRoleArg) {
 
